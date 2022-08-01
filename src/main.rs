@@ -1,8 +1,16 @@
-use rustcap::core::*;
+use pcap::Device;
 
 fn main() {
-    println!("Hello, world!");
+    print_interfaces();
+}
 
-    let something = rustcap::core::create("wlp3s0").unwrap();
-    println!("{:?}", something.datalink());
+fn print_interfaces() -> () {
+    for elem in Device::list().unwrap() {
+        println!("------------------------------");
+        println!("[{:?} ] : ", elem.name);
+        for address in elem.addresses {
+            println!("[{:?} / {:?}] : {:?}, {:?}", address.addr, address.netmask, address.dst_addr, address.broadcast_addr);
+        }
+        println!("Desc : {:?}", elem.desc);
+    }
 }
