@@ -1,11 +1,8 @@
-use pcap::Device;
+use rustcap::core::*;
 
 fn main() {
     println!("Hello, world!");
 
-    let devices = Device::list().unwrap();
-
-    for device in devices {
-        println!("Device name: {}", device.name);
-    }
+    let something = rustcap::core::create("wlp3s0").unwrap();
+    println!("{:?}", something.datalink());
 }
