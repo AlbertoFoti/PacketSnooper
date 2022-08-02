@@ -1,7 +1,5 @@
 # Packet-Snooper
-A Rust packet analyzer
-
-![This is an image](img/snoop.jpg)
+A Rust cross-platform cli packet analyzer
 
 ## TCP/IP Architecture Support
 ### Layer 2 
