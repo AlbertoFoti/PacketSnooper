@@ -3,14 +3,18 @@ use crate::network_components::tcp_packet::TcpPacket;
 use crate::network_components::upd_packet::UdpPacket;
 use crate::utility;
 use std::fmt::{Display, Formatter};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum IpProtocolType {
+    ICMP,
+    IGMP,
     TCP,
     UDP,
 }
 
 pub struct IPv4Packet {
+    pub version: u8,
     pub header_length: u8,
     pub diff_serv: u8,
     pub total_length: [u8; 2],
@@ -27,79 +31,25 @@ pub struct IPv4Packet {
 
 impl IPv4Packet {
     pub fn new(ipv4_data_in_u8: &[u8]) -> IPv4Packet {
-        let (
-            header_length,
-            diff_serv,
-            total_length,
-            identification,
-            flags,
-            fragmentation_offset,
-            ttl,
-            protocol_type,
-            header_checksum,
-            ip_addr_src,
-            ip_addr_dst,
-            payload,
-        ) = IPv4Packet::decode_ipv4(&ipv4_data_in_u8[..]);
         IPv4Packet {
-            header_length,
-            diff_serv,
-            total_length,
-            identification,
-            flags,
-            fragmentation_offset,
-            ttl,
-            protocol_type,
-            header_checksum,
-            ip_addr_src,
-            ip_addr_dst,
-            payload: Vec::from(payload),
+            version: ipv4_data_in_u8[0] >> 4,
+            header_length: ipv4_data_in_u8[0] & 0x0F,
+            diff_serv: ipv4_data_in_u8[1],
+            total_length: utility::clone_into_array(&ipv4_data_in_u8[2..4]),
+            identification: utility::clone_into_array(&ipv4_data_in_u8[4..6]),
+            flags: ipv4_data_in_u8[6],
+            fragmentation_offset: ipv4_data_in_u8[7],
+            ttl: ipv4_data_in_u8[8],
+            protocol_type: IPv4Packet::to_protocol_type(ipv4_data_in_u8[9]),
+            header_checksum: utility::clone_into_array(&ipv4_data_in_u8[10..12]),
+            ip_addr_src: IPv4Address::new(&ipv4_data_in_u8[12..16]),
+            ip_addr_dst: IPv4Address::new(&ipv4_data_in_u8[16..20]),
+            payload: Vec::from(&ipv4_data_in_u8[20..]),
         }
     }
 
-    pub fn decode_ipv4(
-        ipv4_data_in_u8: &[u8],
-    ) -> (
-        u8,
-        u8,
-        [u8; 2],
-        [u8; 2],
-        u8,
-        u8,
-        u8,
-        Option<IpProtocolType>,
-        [u8; 2],
-        IPv4Address,
-        IPv4Address,
-        Vec<u8>,
-    ) {
-        let header_length = ipv4_data_in_u8[0];
-        let diff_serv = ipv4_data_in_u8[1];
-        let total_length: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[2..4]);
-        let identification: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[4..6]);
-        let flags = ipv4_data_in_u8[6];
-        let fragmentation_offset = ipv4_data_in_u8[7];
-        let ttl = ipv4_data_in_u8[8];
-        let protocol_type = IPv4Packet::to_protocol_type(ipv4_data_in_u8[9]);
-        let header_checksum: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[10..12]);
-        let ip_addr_src = IPv4Address::new(&ipv4_data_in_u8[12..16]);
-        let ip_addr_dst = IPv4Address::new(&ipv4_data_in_u8[16..20]);
-        let payload = &ipv4_data_in_u8[20..];
-
-        (
-            header_length,
-            diff_serv,
-            total_length,
-            identification,
-            flags,
-            fragmentation_offset,
-            ttl,
-            protocol_type,
-            header_checksum,
-            ip_addr_src,
-            ip_addr_dst,
-            Vec::from(payload),
-        )
+    pub fn header_length(&self) -> u16 {
+        self.header_length as u16 * 32 / 8
     }
 
     pub fn total_length(&self) -> u16 {
@@ -108,13 +58,15 @@ impl IPv4Packet {
 
     pub fn to_protocol_type(protocol_type_in_u8: u8) -> Option<IpProtocolType> {
         match protocol_type_in_u8 {
+            1 => return Some(IpProtocolType::ICMP),
+            2 => return Some(IpProtocolType::IGMP),
             6 => return Some(IpProtocolType::TCP),
             17 => return Some(IpProtocolType::UDP),
             x => {
                 return {
-                    println!("{:?}", x);
+                    println!("no info on this protocol: {:?}", x);
                     None
-                }
+                };
             }
         }
     }
@@ -122,18 +74,23 @@ impl IPv4Packet {
 
 impl Display for IPv4Packet {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "IPv4 : {} -> {}  -  [header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ] ",
-               self.ip_addr_src,
-               self.ip_addr_dst,
-               self.header_length,
-               self.diff_serv,
-               self.total_length(),
-               utility::to_u16(&self.identification),
-               self.flags,
-               self.fragmentation_offset,
-               self.ttl,
-               utility::to_u16(&self.header_checksum),
-               ).unwrap();
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Blue))).unwrap();
+        write!(f, "IPv4     ").unwrap();
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
+        write!(f, ": {} -> {}\n   > [version: {}, header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ] ",
+            self.ip_addr_src,
+            self.ip_addr_dst,
+            self.version,
+            self.header_length(),
+            self.diff_serv,
+            self.total_length(),
+            utility::to_u16(&self.identification),
+            self.flags,
+            self.fragmentation_offset,
+            self.ttl,
+            utility::to_u16(&self.header_checksum),
+        ).unwrap();
         match self.protocol_type {
             Some(_) => {
                 write!(f, "({:?}) \n", self.protocol_type.unwrap())
@@ -144,14 +101,20 @@ impl Display for IPv4Packet {
         }
         .unwrap();
         match self.protocol_type {
+            Some(IpProtocolType::ICMP) => {
+                write!(f, "ICMP     : Unknown Details")
+            },
+            Some(IpProtocolType::IGMP) => {
+                write!(f, "IGMP     : Unknown Details")
+            },
             Some(IpProtocolType::UDP) => {
                 write!(f, "{}", UdpPacket::new(self.payload.as_slice()))
-            }
+            },
             Some(IpProtocolType::TCP) => {
                 write!(f, "{}", TcpPacket::new(self.payload.as_slice()))
-            }
+            },
             _ => {
-                write!(f, "Other Protocol used at layer 4 (Unknown Protocol)")
+                write!(f, "Other Protocol incapsulated in IPv4 (Unknown Protocol)")
             }
         }
     }

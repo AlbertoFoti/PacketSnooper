@@ -19,24 +19,11 @@ pub struct EtherPacket {
 
 impl EtherPacket {
     pub fn new(ether_data_in_u8: &[u8]) -> EtherPacket {
-        let (mac_addr_dst, mac_addr_src, ether_type) =
-            EtherPacket::decode_ethernet(&ether_data_in_u8[0..14]);
-        let payload = &ether_data_in_u8[14..];
         EtherPacket {
-            mac_addr_dst,
-            mac_addr_src,
-            ether_type,
-            payload: Vec::from(payload),
-        }
-    }
-
-    fn decode_ethernet(ether_data_in_u8: &[u8]) -> (MacAddress, MacAddress, Option<EtherType>) {
-        let mac_addr_dst = MacAddress::new(&ether_data_in_u8[0..6]);
-        let mac_addr_src = MacAddress::new(&ether_data_in_u8[6..12]);
-
-        let ether_type = EtherPacket::to_ether_type(&ether_data_in_u8[12..14]);
-
-        (mac_addr_dst, mac_addr_src, ether_type)
+            mac_addr_dst: MacAddress::new(&ether_data_in_u8[0..6]),
+            mac_addr_src: MacAddress::new(&ether_data_in_u8[6..12]),
+            ether_type: EtherPacket::to_ether_type(&ether_data_in_u8[12..14]),
+            payload: Vec::from(&ether_data_in_u8[14..]) }
     }
 
     fn to_ether_type(ether_type_in_u8: &[u8]) -> Option<EtherType> {
@@ -46,7 +33,7 @@ impl EtherPacket {
             [134, 221] => return Some(EtherType::IPV6),
             x => {
                 return {
-                    println!("{:?}", x);
+                    println!("no info on this protocol: {:?}", x);
                     None
                 }
             }
@@ -57,8 +44,8 @@ impl EtherPacket {
 impl Display for EtherPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow))).unwrap();
-        write!(f, "Ethernet ");
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green))).unwrap();
+        write!(f, "Ethernet ").unwrap();
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
         write!(
             f,
@@ -81,13 +68,13 @@ impl Display for EtherPacket {
                 write!(f, "{}", IPv4Packet::new(self.payload.as_slice()))
             },
             Some(EtherType::IPV6) => {
-                write!(f, "Ipv6 : ")
+                write!(f, "IPv6     : Unknown Details")
             },
             Some(EtherType::ARP) => {
-                write!(f, "ARP : ")
+                write!(f, "ARP      : Unknown Details")
             },
             _ => {
-                write!(f, "Other Protocol used at layer 3 (Unknown Protocol)")
+                write!(f, "Other Protocol incapsulated in Ethernet frame (Unknown Protocol)")
             }
         }
     }

@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Write};
 
+#[derive(Debug, PartialEq)]
 pub struct IPv4Address {
     pub ip_raw: Vec<u8>,
 }

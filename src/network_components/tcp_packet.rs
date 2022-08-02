@@ -1,5 +1,6 @@
 use crate::utility;
 use std::fmt::{Display, Formatter};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 pub struct TcpPacket {
     pub src_port: [u8; 2],
@@ -28,9 +29,13 @@ impl TcpPacket {
 
 impl Display for TcpPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255,140,0)))).unwrap();
+        write!(f, "TCP      ").unwrap();
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
         write!(
             f,
-            "TCP: {} -> {}",
+            ": {} -> {}",
             utility::to_u16(&self.src_port),
             utility::to_u16(&self.dst_port)
         )

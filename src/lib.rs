@@ -38,7 +38,6 @@ pub mod packet_snooper {
     }
     */
 
-
     fn decode_packet(packet: Packet) {
         let data = packet.data;
 

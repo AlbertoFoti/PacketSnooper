@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use crate::utility;
 
 pub struct UdpPacket {
@@ -28,9 +29,13 @@ impl UdpPacket {
 
 impl Display for UdpPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255,140,0)))).unwrap();
+        write!(f, "UDP      ").unwrap();
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
         write!(
             f,
-            "UDP: {} -> {}",
+            ": {} -> {}",
             utility::to_u16(&self.src_port),
             utility::to_u16(&self.dst_port)
         )
