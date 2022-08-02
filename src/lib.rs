@@ -1,10 +1,11 @@
 mod networkComponents;
+mod utility;
 
 pub mod PacketSnooper {
     use std::io;
     use std::io::Write;
     use pcap::{Activated, Capture, Device, Packet};
-    use crate::networkComponents::etherPacket::EtherPacket;
+    use crate::networkComponents::ethernetPacket::EtherPacket;
 
     pub fn print_interfaces() -> () {
         for device in Device::list().unwrap() {
