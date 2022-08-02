@@ -26,14 +26,16 @@ pub struct IPv4Packet {
     pub header_checksum: [u8; 2],
     pub ip_addr_src: IPv4Address,
     pub ip_addr_dst: IPv4Address,
+    pub options: Vec<u8>,
     pub payload: Vec<u8>,
 }
 
 impl IPv4Packet {
     pub fn new(ipv4_data_in_u8: &[u8]) -> IPv4Packet {
+        let header_nibble = ipv4_data_in_u8[0] & 0x0F;
         IPv4Packet {
             version: ipv4_data_in_u8[0] >> 4,
-            header_length: ipv4_data_in_u8[0] & 0x0F,
+            header_length: header_nibble,
             diff_serv: ipv4_data_in_u8[1],
             total_length: utility::clone_into_array(&ipv4_data_in_u8[2..4]),
             identification: utility::clone_into_array(&ipv4_data_in_u8[4..6]),
@@ -44,8 +46,13 @@ impl IPv4Packet {
             header_checksum: utility::clone_into_array(&ipv4_data_in_u8[10..12]),
             ip_addr_src: IPv4Address::new(&ipv4_data_in_u8[12..16]),
             ip_addr_dst: IPv4Address::new(&ipv4_data_in_u8[16..20]),
-            payload: Vec::from(&ipv4_data_in_u8[20..]),
+            options: IPv4Packet::options(IPv4Packet::calc_header_length(header_nibble), &ipv4_data_in_u8[..]),
+            payload: IPv4Packet::payload(IPv4Packet::calc_header_length(header_nibble), &ipv4_data_in_u8[..]),
         }
+    }
+
+    pub fn calc_header_length(header_length: u8) -> u16 {
+        header_length as u16 * 32 / 8
     }
 
     pub fn header_length(&self) -> u16 {
@@ -54,6 +61,14 @@ impl IPv4Packet {
 
     pub fn total_length(&self) -> u16 {
         ((self.total_length[0] as u16) << 8) | self.total_length[1] as u16
+    }
+
+    pub fn payload(header_length: u16, ipv4_data_in_u8: &[u8]) -> Vec<u8> {
+        Vec::from(&ipv4_data_in_u8[header_length as usize..])
+    }
+
+    pub fn options(header_length: u16, ipv4_data_in_u8: &[u8]) -> Vec<u8> {
+        Vec::from(&ipv4_data_in_u8[20..header_length as usize])
     }
 
     pub fn to_protocol_type(protocol_type_in_u8: u8) -> Option<IpProtocolType> {
