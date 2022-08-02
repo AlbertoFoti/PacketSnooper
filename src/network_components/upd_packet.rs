@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 pub struct UdpPacket {
-    pub payload: Vec<u8>
+    pub payload: Vec<u8>,
 }
 
 impl UdpPacket {

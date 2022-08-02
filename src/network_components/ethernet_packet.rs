@@ -1,6 +1,6 @@
-use std::fmt::{Display, Formatter};
 use crate::network_components::ipv4_packet::IPv4Packet;
 use crate::network_components::mac_address::MacAddress;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Copy, Clone)]
 pub enum EtherType {
@@ -17,9 +17,15 @@ pub struct EtherPacket {
 
 impl EtherPacket {
     pub fn new(ether_data_in_u8: &[u8]) -> EtherPacket {
-        let (mac_addr_dst, mac_addr_src, ether_type) = EtherPacket::decode_ethernet(&ether_data_in_u8[0..14]);
+        let (mac_addr_dst, mac_addr_src, ether_type) =
+            EtherPacket::decode_ethernet(&ether_data_in_u8[0..14]);
         let payload = &ether_data_in_u8[14..];
-        EtherPacket { mac_addr_dst, mac_addr_src, ether_type, payload: Vec::from(payload) }
+        EtherPacket {
+            mac_addr_dst,
+            mac_addr_src,
+            ether_type,
+            payload: Vec::from(payload),
+        }
     }
 
     pub fn decode_ethernet(ether_data_in_u8: &[u8]) -> (MacAddress, MacAddress, Option<EtherType>) {
@@ -35,30 +41,40 @@ impl EtherPacket {
         match ether_type_in_u8 {
             [8, 0] => return Some(EtherType::IPV4),
             [134, 221] => return Some(EtherType::IPV6),
-            x => return {
-                println!("{:?}", x);
-                None
-            },
+            x => {
+                return {
+                    println!("{:?}", x);
+                    None
+                }
+            }
         }
     }
 }
 
 impl Display for EtherPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Ethernet : {} -> {} ", self.mac_addr_dst, self.mac_addr_src).unwrap();
+        write!(
+            f,
+            "Ethernet : {} -> {} ",
+            self.mac_addr_dst, self.mac_addr_src
+        )
+        .unwrap();
         match self.ether_type {
             Some(_) => {
                 write!(f, "({:?}) \n", self.ether_type.unwrap())
-            },
-            None => { write!(f, "(None) \n") },
-        }.unwrap();
+            }
+            None => {
+                write!(f, "(None) \n")
+            }
+        }
+        .unwrap();
         match self.ether_type {
             Some(EtherType::IPV4) => {
                 write!(f, "{}", IPv4Packet::new(self.payload.as_slice()))
-            },
+            }
             _ => {
                 write!(f, "Other Protocol used at layer 3 (Unknown Protocol)")
-            },
+            }
         }
     }
 }

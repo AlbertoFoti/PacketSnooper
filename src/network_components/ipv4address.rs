@@ -6,7 +6,9 @@ pub struct IPv4Address {
 
 impl IPv4Address {
     pub fn new(ip_in_u8: &[u8]) -> IPv4Address {
-        IPv4Address { ip_raw: Vec::from(ip_in_u8) }
+        IPv4Address {
+            ip_raw: Vec::from(ip_in_u8),
+        }
     }
 
     pub fn ipv4(&self) -> String {

@@ -6,7 +6,9 @@ pub struct MacAddress {
 
 impl MacAddress {
     pub fn new(mac_in_u8: &[u8]) -> MacAddress {
-        MacAddress { mac_raw: Vec::from(mac_in_u8) }
+        MacAddress {
+            mac_raw: Vec::from(mac_in_u8),
+        }
     }
 
     pub fn mac(&self) -> String {
