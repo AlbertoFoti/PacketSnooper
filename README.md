@@ -5,7 +5,7 @@ A Rust packet analyzer
 
 ## TCP/IP Architecture Support
 ### Layer 2 
-    Ethernet
+    full-support: Ethernet
 ### Layer 3 (Ethernet field "EtherType". IEEE 802.3)
     full-support: IPv4, 
     identification: (IPv6, ARP).
