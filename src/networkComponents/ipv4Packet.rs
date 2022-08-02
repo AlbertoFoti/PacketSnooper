@@ -13,26 +13,43 @@ pub struct IPv4Packet {
     pub header_length: u8,
     pub diff_serv: u8,
     pub total_length: [u8; 2],
-    //pub ip_addr_src: IPv4Address,
-    //pub ip_addr_dst: IPv4Address,
-    //pub identification: [u8; 2],
-    //pub flags: u8,
-    // pub fragmentation_offset: u8,
-    // pub ttl: u8,
+    pub identification: [u8; 2],
+    pub flags: u8,
+    pub fragmentation_offset: u8,
+    pub ttl: u8,
     pub protocol_type: Option<IpProtocolType>,
-    // pub header_checksum: [u8; 2],
-    //pub payload: Vec<u8>,
+    pub header_checksum: [u8; 2],
+    pub ip_addr_src: IPv4Address,
+    pub ip_addr_dst: IPv4Address,
+    pub payload: Vec<u8>,
 }
 
 impl IPv4Packet {
     pub fn new(ipv4_data_in_u8: &[u8]) -> IPv4Packet {
-        //let (mac_addr_dst, mac_addr_src, ether_type) = IPv4Packet::decode_ipv4(&ipv4_data_in_u8[..]);
+        let (
+            header_length, diff_serv, total_length, identification,
+            flags, fragmentation_offset, ttl, protocol_type,
+            header_checksum, ip_addr_src, ip_addr_dst, payload
+        ) = IPv4Packet::decode_ipv4(&ipv4_data_in_u8[..]);
+        IPv4Packet { header_length, diff_serv, total_length, identification, flags, fragmentation_offset, ttl, protocol_type, header_checksum, ip_addr_src, ip_addr_dst, payload: Vec::from(payload) }
+    }
+
+    pub fn decode_ipv4(ipv4_data_in_u8: &[u8]) -> (u8, u8, [u8;2], [u8;2], u8, u8, u8, Option<IpProtocolType>, [u8;2], IPv4Address, IPv4Address, Vec<u8>) {
         let header_length = ipv4_data_in_u8[0];
         let diff_serv = ipv4_data_in_u8[1];
         let total_length: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[2..4]);
+        let identification: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[4..6]);
+        let flags = ipv4_data_in_u8[6];
+        let fragmentation_offset = ipv4_data_in_u8[7];
+        let ttl = ipv4_data_in_u8[8];
         let protocol_type = ipv4_data_in_u8[9];
         let protocol_type = IPv4Packet::to_protocol_type(ipv4_data_in_u8[9]);
-        IPv4Packet { header_length, diff_serv, total_length, protocol_type }
+        let header_checksum: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[10..12]);
+        let ip_addr_src = IPv4Address::new(&ipv4_data_in_u8[12..16]);
+        let ip_addr_dst = IPv4Address::new(&ipv4_data_in_u8[16..20]);
+        let payload = &ipv4_data_in_u8[20..];
+
+        ( header_length, diff_serv, total_length, identification, flags, fragmentation_offset, ttl, protocol_type, header_checksum, ip_addr_src, ip_addr_dst, Vec::from(payload) )
     }
 
     pub fn total_length(&self) -> u16 {
@@ -53,10 +70,18 @@ impl IPv4Packet {
 
 impl Display for IPv4Packet {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "IPv4 : [header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, ]",
+        write!(f, "IPv4 : {} -> {}  -  [header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ] ",
+               self.ip_addr_src,
+               self.ip_addr_dst,
                self.header_length,
                self.diff_serv,
-               self.total_length()).unwrap();
+               self.total_length(),
+               utility::to_hex16(&self.identification),
+               self.flags,
+               self.fragmentation_offset,
+               self.ttl,
+               utility::to_hex16(&self.header_checksum),
+               ).unwrap();
         match self.protocol_type {
             Some(et) => {
                 write!(f, "({:?}) \n", self.protocol_type.unwrap())
