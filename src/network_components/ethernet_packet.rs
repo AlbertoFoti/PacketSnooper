@@ -2,10 +2,11 @@ use crate::network_components::ipv4_packet::IPv4Packet;
 use crate::network_components::mac_address::MacAddress;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EtherType {
     IPV4,
     IPV6,
+    ARP,
 }
 
 pub struct EtherPacket {
@@ -28,7 +29,7 @@ impl EtherPacket {
         }
     }
 
-    pub fn decode_ethernet(ether_data_in_u8: &[u8]) -> (MacAddress, MacAddress, Option<EtherType>) {
+    fn decode_ethernet(ether_data_in_u8: &[u8]) -> (MacAddress, MacAddress, Option<EtherType>) {
         let mac_addr_dst = MacAddress::new(&ether_data_in_u8[0..6]);
         let mac_addr_src = MacAddress::new(&ether_data_in_u8[6..12]);
 
@@ -37,9 +38,10 @@ impl EtherPacket {
         (mac_addr_dst, mac_addr_src, ether_type)
     }
 
-    pub fn to_ether_type(ether_type_in_u8: &[u8]) -> Option<EtherType> {
+    fn to_ether_type(ether_type_in_u8: &[u8]) -> Option<EtherType> {
         match ether_type_in_u8 {
             [8, 0] => return Some(EtherType::IPV4),
+            [8, 6] => return Some(EtherType::ARP),
             [134, 221] => return Some(EtherType::IPV6),
             x => {
                 return {
@@ -68,10 +70,17 @@ impl Display for EtherPacket {
             }
         }
         .unwrap();
+
         match self.ether_type {
             Some(EtherType::IPV4) => {
                 write!(f, "{}", IPv4Packet::new(self.payload.as_slice()))
-            }
+            },
+            Some(EtherType::IPV6) => {
+                write!(f, "Ipv6 : ")
+            },
+            Some(EtherType::ARP) => {
+                write!(f, "ARP : ")
+            },
             _ => {
                 write!(f, "Other Protocol used at layer 3 (Unknown Protocol)")
             }

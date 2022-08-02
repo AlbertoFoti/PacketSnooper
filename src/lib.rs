@@ -30,6 +30,15 @@ pub mod packet_snooper {
         }
     }
 
+    /*
+    fn print_packet(packet: Packet) {
+        println!("------------------------");
+        println!("{:?} | {:?} | {:?}", packet.header.caplen, packet.header.len, packet.header.ts.tv_sec);
+        println!("{:?}", packet.data);
+    }
+    */
+
+
     fn decode_packet(packet: Packet) {
         let data = packet.data;
 

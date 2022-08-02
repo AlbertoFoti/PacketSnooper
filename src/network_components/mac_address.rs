@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Write};
 
+#[derive(Debug, PartialEq)]
 pub struct MacAddress {
     pub mac_raw: Vec<u8>,
 }
