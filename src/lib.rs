@@ -2,17 +2,20 @@ mod network_components;
 mod utility;
 
 pub mod packet_snooper {
+    use crate::network_components::ethernet_packet::EtherPacket;
+    use pcap::{Device, Packet};
     use std::io;
     use std::io::Write;
-    use pcap::{Device, Packet};
-    use crate::network_components::ethernet_packet::EtherPacket;
 
     pub fn print_interfaces() -> () {
         for device in Device::list().unwrap() {
             println!("------------------------------");
             println!("[{:?} ] : ", device.name);
             for address in device.addresses {
-                println!("[{:?} / {:?}] : {:?}, {:?}", address.addr, address.netmask, address.dst_addr, address.broadcast_addr);
+                println!(
+                    "[{:?} / {:?}] : {:?}, {:?}",
+                    address.addr, address.netmask, address.dst_addr, address.broadcast_addr
+                );
             }
             println!("Desc : {:?}", device.desc);
         }
@@ -26,6 +29,14 @@ pub mod packet_snooper {
             decode_packet(packet);
         }
     }
+
+    /*
+    fn print_packet(packet: Packet) {
+        println!("------------------------");
+        println!("{:?} | {:?} | {:?}", packet.header.caplen, packet.header.len, packet.header.ts.tv_sec);
+        println!("{:?}", packet.data);
+    }
+    */
 
     fn decode_packet(packet: Packet) {
         let data = packet.data;

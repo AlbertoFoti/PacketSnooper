@@ -3,7 +3,19 @@ name = "packet_snooper"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "packet_snooper"
+path = "src/lib.rs"    # The source file of the target.
+test = true            # Is tested by default.
+doctest = false        # Documentation examples are tested by default.
+crate-type = ["lib"]   # The crate types to generate.
+
+[[bin]]
+name = "main"
+test = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 pcap = "0.9.2"
+termcolor = "1.1.3"

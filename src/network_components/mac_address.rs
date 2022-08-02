@@ -1,12 +1,15 @@
 use std::fmt::{Display, Formatter, Write};
 
+#[derive(Debug, PartialEq)]
 pub struct MacAddress {
     pub mac_raw: Vec<u8>,
 }
 
 impl MacAddress {
     pub fn new(mac_in_u8: &[u8]) -> MacAddress {
-        MacAddress { mac_raw: Vec::from(mac_in_u8) }
+        MacAddress {
+            mac_raw: Vec::from(mac_in_u8),
+        }
     }
 
     pub fn mac(&self) -> String {
