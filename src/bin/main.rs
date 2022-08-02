@@ -1,8 +1,8 @@
-use PacketSnooper::PacketSnooper;
+use packet_snooper::packet_snooper;
 
 fn main() {
 
-    PacketSnooper::print_interfaces();
+    packet_snooper::print_interfaces();
 
-    PacketSnooper::test_simple_read_packets();
+    packet_snooper::test_simple_read_packets();
 }

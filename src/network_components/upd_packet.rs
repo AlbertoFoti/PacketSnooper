@@ -1,19 +1,19 @@
 use std::fmt::{Display, Formatter};
 
 pub struct UdpPacket {
-    payload: Vec<u8>
+    pub payload: Vec<u8>
 }
 
 impl UdpPacket {
     pub fn new(udp_data_in_u8: &[u8]) -> UdpPacket {
-        let (payload) = UdpPacket::decode_udp(&udp_data_in_u8[..]);
+        let payload = UdpPacket::decode_udp(&udp_data_in_u8[..]);
         UdpPacket { payload }
     }
 
-    pub fn decode_udp(udp_data_in_u8: &[u8]) -> (Vec<u8>) {
+    pub fn decode_udp(udp_data_in_u8: &[u8]) -> Vec<u8> {
         let payload = &udp_data_in_u8[..];
 
-        ( Vec::from(payload) )
+        Vec::from(payload)
     }
 }
 

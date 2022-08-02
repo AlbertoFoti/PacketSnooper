@@ -1,10 +1,10 @@
-use std::fmt::{Display, Formatter, write};
+use std::fmt::{Display, Formatter};
 use crate::utility;
 
 pub struct TcpPacket {
-    src_port: [u8; 2],
-    dst_port: [u8; 2],
-    payload: Vec<u8>,
+    pub src_port: [u8; 2],
+    pub dst_port: [u8; 2],
+    pub payload: Vec<u8>,
 }
 
 impl TcpPacket {

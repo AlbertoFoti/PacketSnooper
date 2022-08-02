@@ -1,7 +1,6 @@
-use std::fmt::{Display, Formatter, Write};
-use std::panic::catch_unwind;
-use crate::networkComponents::ipv4Packet::IPv4Packet;
-use crate::networkComponents::macAddress::MacAddress;
+use std::fmt::{Display, Formatter};
+use crate::network_components::ipv4_packet::IPv4Packet;
+use crate::network_components::mac_address::MacAddress;
 
 #[derive(Debug, Copy, Clone)]
 pub enum EtherType {
@@ -48,7 +47,7 @@ impl Display for EtherPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Ethernet : {} -> {} ", self.mac_addr_dst, self.mac_addr_src).unwrap();
         match self.ether_type {
-            Some(et) => {
+            Some(_) => {
                 write!(f, "({:?}) \n", self.ether_type.unwrap())
             },
             None => { write!(f, "(None) \n") },

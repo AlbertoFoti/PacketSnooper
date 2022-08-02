@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
-use crate::networkComponents::ipv4Address::IPv4Address;
-use crate::networkComponents::tcpPacket::TcpPacket;
-use crate::networkComponents::updPacket::UdpPacket;
+use crate::network_components::ipv4address::IPv4Address;
+use crate::network_components::tcp_packet::TcpPacket;
+use crate::network_components::upd_packet::UdpPacket;
 use crate::utility;
 
 #[derive(Debug, Copy, Clone)]
@@ -44,7 +44,6 @@ impl IPv4Packet {
         let flags = ipv4_data_in_u8[6];
         let fragmentation_offset = ipv4_data_in_u8[7];
         let ttl = ipv4_data_in_u8[8];
-        let protocol_type = ipv4_data_in_u8[9];
         let protocol_type = IPv4Packet::to_protocol_type(ipv4_data_in_u8[9]);
         let header_checksum: [u8; 2] = utility::clone_into_array(&ipv4_data_in_u8[10..12]);
         let ip_addr_src = IPv4Address::new(&ipv4_data_in_u8[12..16]);
@@ -85,7 +84,7 @@ impl Display for IPv4Packet {
                utility::to_u16(&self.header_checksum),
                ).unwrap();
         match self.protocol_type {
-            Some(et) => {
+            Some(_) => {
                 write!(f, "({:?}) \n", self.protocol_type.unwrap())
             },
             None => { write!(f, "(None) \n") },

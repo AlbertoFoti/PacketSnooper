@@ -1,4 +1,4 @@
-use std::fmt::{Display, format, Formatter, Write};
+use std::fmt::{Display, Formatter, Write};
 
 pub struct MacAddress {
     pub mac_raw: Vec<u8>,
