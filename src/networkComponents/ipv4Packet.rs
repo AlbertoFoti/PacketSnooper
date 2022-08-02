@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter};
 use crate::networkComponents::ipv4Address::IPv4Address;
+use crate::networkComponents::tcpPacket::TcpPacket;
+use crate::networkComponents::updPacket::UdpPacket;
 use crate::utility;
 
 #[derive(Debug, Copy, Clone)]
@@ -76,11 +78,11 @@ impl Display for IPv4Packet {
                self.header_length,
                self.diff_serv,
                self.total_length(),
-               utility::to_hex16(&self.identification),
+               utility::to_u16(&self.identification),
                self.flags,
                self.fragmentation_offset,
                self.ttl,
-               utility::to_hex16(&self.header_checksum),
+               utility::to_u16(&self.header_checksum),
                ).unwrap();
         match self.protocol_type {
             Some(et) => {
@@ -90,13 +92,13 @@ impl Display for IPv4Packet {
         }.unwrap();
         match self.protocol_type {
             Some(IpProtocolType::UDP) => {
-                write!(f, "\t\t UDP : ")
+                write!(f, "{}", UdpPacket::new(self.payload.as_slice()))
             },
             Some(IpProtocolType::TCP) => {
-                write!(f, "\t\t TCP : ")
+                write!(f, "{}", TcpPacket::new(self.payload.as_slice()))
             },
             _ => {
-                write!(f, "\t\t Other Protocol used at layer 4 (Unknown Protocol)")
+                write!(f, "Other Protocol used at layer 4 (Unknown Protocol)")
             },
         }
     }

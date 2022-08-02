@@ -10,6 +10,6 @@ pub fn clone_into_array<A, T>(slice: &[T]) -> A
     a
 }
 
-pub fn to_hex16(array: &[u8; 2]) -> u16 {
+pub fn to_u16(array: &[u8; 2]) -> u16 {
     ((array[0] as u16) << 8) | array[1] as u16
 }

@@ -5,3 +5,6 @@ pub mod ethernetPacket;
 
 pub mod ipv4Address;
 pub mod ipv4Packet;
+
+pub mod updPacket;
+pub mod tcpPacket;

@@ -55,10 +55,10 @@ impl Display for EtherPacket {
         }.unwrap();
         match self.ether_type {
             Some(EtherType::IPV4) => {
-                write!(f, "\t {}", IPv4Packet::new(self.payload.as_slice()))
+                write!(f, "{}", IPv4Packet::new(self.payload.as_slice()))
             },
             _ => {
-                write!(f, "\t Other Protocol used at layer 3 (Unknown Protocol)")
+                write!(f, "Other Protocol used at layer 3 (Unknown Protocol)")
             },
         }
     }
