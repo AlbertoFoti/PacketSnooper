@@ -1,6 +1,7 @@
 use std::fmt::{Display, format, Formatter, Write};
 
 pub struct MacAddress {
+    pub mac_raw: Vec<u8>,
     pub mac: String,
 }
 
@@ -11,11 +12,7 @@ impl MacAddress {
             write!(mac, "{:02x}:", byte).unwrap();
         }
         mac.pop();
-        MacAddress { mac }
-    }
-
-    pub fn print(&self) {
-        println!("{}", self.mac);
+        MacAddress { mac_raw: Vec::from(mac_in_u8),mac }
     }
 }
 

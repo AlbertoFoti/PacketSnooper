@@ -1,10 +1,10 @@
 mod networkComponents;
 
 pub mod PacketSnooper {
+    use std::io;
+    use std::io::Write;
     use pcap::{Activated, Capture, Device, Packet};
-    use crate::networkComponents;
-    use crate::networkComponents::decode_ether_type;
-    use crate::networkComponents::MacAddress::MacAddress;
+    use crate::networkComponents::etherPacket::EtherPacket;
 
     pub fn print_interfaces() -> () {
         for device in Device::list().unwrap() {
@@ -32,34 +32,14 @@ pub mod PacketSnooper {
         println!("{:?}", packet.data);
     }
 
-    fn test_read_packets() {
-        let main_device = Device::lookup().unwrap();
-        let mut cap = Capture::from_device(main_device).unwrap()
-            .promisc(true)
-            .snaplen(5000)
-            .open().unwrap();
-
-        while let Ok(packet) = cap.next() {
-            println!("received packet! {:?}", packet);
-        }
-    }
-
-    fn read_packets<T: Activated>(mut capture: Capture<T>) {
-        while let Ok(packet) = capture.next() {
-            println!("received packet! {:?}", packet);
-        }
-    }
-
     fn decode_packet(packet: Packet) {
         let data = packet.data;
 
         // ethernet header (fixed 6 B destination + 6 B source + 2 B Protocol Type = 14 B)
-        let (mac_addr_dst, mac_addr_src, ether_type) = decode_ether_type(&data[0..14]);
+        let ether_packet = EtherPacket::new(&data[..]);
 
-        print!("{} -> {} ", mac_addr_dst, mac_addr_src);
-        match ether_type {
-            Some(et) => { println!("({:?})", et) },
-            None => { println!("(None)") },
-        }
+        println!("---------------");
+        println!("{}", ether_packet);
+        io::stdout().flush().unwrap();
     }
 }
