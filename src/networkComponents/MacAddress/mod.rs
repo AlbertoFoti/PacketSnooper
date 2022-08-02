@@ -8,7 +8,7 @@ impl MacAddress {
     pub fn new(mac_in_u8: &[u8]) -> MacAddress {
         let mut mac = String::new();
         for &byte in mac_in_u8.iter() {
-            write!(mac, "{:x}:", byte).unwrap();
+            write!(mac, "{:02x}:", byte).unwrap();
         }
         mac.pop();
         MacAddress { mac }

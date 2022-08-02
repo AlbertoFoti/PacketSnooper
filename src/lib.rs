@@ -2,6 +2,8 @@ mod networkComponents;
 
 pub mod PacketSnooper {
     use pcap::{Activated, Capture, Device, Packet};
+    use crate::networkComponents;
+    use crate::networkComponents::decode_ether_type;
     use crate::networkComponents::MacAddress::MacAddress;
 
     pub fn print_interfaces() -> () {
@@ -52,10 +54,12 @@ pub mod PacketSnooper {
         let data = packet.data;
 
         // ethernet header (fixed 6 B destination + 6 B source + 2 B Protocol Type = 14 B)
-        let mac_addr_dst = MacAddress::new(&data[0..6]);
-        let mac_addr_src = MacAddress::new(&data[6..12]);
-        let ether_type = &data[12..14];
+        let (mac_addr_dst, mac_addr_src, ether_type) = decode_ether_type(&data[0..14]);
 
-        println!("{} -> {} ({:?})", mac_addr_dst, mac_addr_src, ether_type);
+        print!("{} -> {} ", mac_addr_dst, mac_addr_src);
+        match ether_type {
+            Some(et) => { println!("({:?})", et) },
+            None => { println!("(None)") },
+        }
     }
 }
