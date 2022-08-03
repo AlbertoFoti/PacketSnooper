@@ -49,18 +49,9 @@ impl Display for EtherPacket {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
         write!(
             f,
-            ": {} -> {} ",
+            ": {} -> {} \n",
             self.mac_addr_dst, self.mac_addr_src
         )
-        .unwrap();
-        match self.ether_type {
-            Some(_) => {
-                write!(f, "({:?}) \n", self.ether_type.unwrap())
-            }
-            None => {
-                write!(f, "(None) \n")
-            }
-        }
         .unwrap();
 
         match self.ether_type {

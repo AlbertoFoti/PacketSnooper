@@ -93,7 +93,8 @@ impl Display for IPv4Packet {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Blue))).unwrap();
         write!(f, "IPv4     ").unwrap();
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
-        write!(f, ": {} -> {}\n > [version: {}, header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ] ",
+
+        write!(f, ": {} -> {}\n > [version: {}, header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ]\n",
             self.ip_addr_src,
             self.ip_addr_dst,
             self.version,
@@ -106,15 +107,7 @@ impl Display for IPv4Packet {
             self.ttl,
             utility::to_u16(&self.header_checksum),
         ).unwrap();
-        match self.protocol_type {
-            Some(_) => {
-                write!(f, "({:?}) \n", self.protocol_type.unwrap())
-            }
-            None => {
-                write!(f, "(None) \n")
-            }
-        }
-        .unwrap();
+
         match self.protocol_type {
             Some(IpProtocolType::ICMP) => {
                 write!(f, "ICMP     : Unknown Details")

@@ -29,6 +29,7 @@ impl Display for TcpPacket {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255,140,0)))).unwrap();
         write!(f, "TCP      ").unwrap();
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
+
         write!(
             f,
             ": {} -> {}\n",
