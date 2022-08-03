@@ -76,6 +76,23 @@ fn main() {
                     },
                     Err(_) => { println!("Something went wrong") }
                 };
+            },
+            State::Stopped => {
+                print_stopped_menu();
+                let command: Result<String, _> = get_data_from_user();
+
+                match command {
+                    Ok(cmd) => {
+                        match cmd.to_lowercase().as_str() {
+                            "abort" => { packet_snooper.abort(); },
+                            "end" => { packet_snooper.end(); },
+                            "resume" => { packet_snooper.resume(); },
+                            "exit" => { return; }
+                            _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
+                        };
+                    },
+                    Err(_) => { println!("Something went wrong") }
+                };
             }
             _ => {
                 break;
@@ -172,6 +189,19 @@ fn print_working_menu() {
     println!("- abort (back to configuration)");
     println!("- end (back to ready state)");
     println!("- stop");
+    println!("- exit");
+    println!("------------------------");
+    println!("Type command :");
+    print!(">>> ");
+    io::stdout().flush().unwrap();
+}
+
+fn print_stopped_menu() {
+    print_main_menu();
+    println!("Packet Snooper is stopped");
+    println!("- abort (back to configuration)");
+    println!("- end (back to ready state)");
+    println!("- resume");
     println!("- exit");
     println!("------------------------");
     println!("Type command :");

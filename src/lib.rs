@@ -31,22 +31,22 @@ impl PacketSnooper {
     pub fn start(&mut self) {
         self.state = State::Working;
         //test_simple_read_packets();
-        println!("working...");
     }
 
     pub fn stop(&mut self) {
         self.state = State::Stopped;
-        println!("stopped...");
+    }
+
+    pub fn resume(&mut self) {
+        self.state = State::Working;
     }
 
     pub fn end(&mut self) {
         self.state = State::Ready;
-        println!("ended...");
     }
 
     pub fn abort(&mut self) {
         self.state = State::ConfigDevice;
-        println!("aborted...");
     }
 
     pub fn set_device(&mut self, device: Device) {
