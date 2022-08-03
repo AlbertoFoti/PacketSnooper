@@ -20,8 +20,14 @@ A Rust cross-platform cli packet analyzer
                     SFTP=115, SNMP=161, BGP=179, HTTPS=443
     future support: ()
 
+## Architecture Overview
+![This is an image](img/architecture.jpg)
+
+## Internal State Machine design
+![This is an image](img/statemachine.jpg)
+
 ## Technologies Used
-- Main Language: Rust
+- Main programming Language: Rust
 - Version Control, Team Work: Git, GitHub
 
 ## Authors
