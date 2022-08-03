@@ -94,9 +94,6 @@ fn main() {
                     Err(_) => { println!("Something went wrong") }
                 };
             }
-            _ => {
-                break;
-            }
         }
     }
 }

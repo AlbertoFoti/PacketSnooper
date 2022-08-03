@@ -35,10 +35,7 @@ pub fn to_upper_layer_service(src_port: u16, dst_port: u16) -> Option<UpperLayer
         161 => return Some(UpperLayerService::SNMP),
         179 => return Some(UpperLayerService::BGP),
         443 => return Some(UpperLayerService::HTTPS),
-        65354 => {
-            println!("both ports are not well known");
-            None
-        },
+        65354 => { None },
         x => {
                 println!("no info on this protocol running on port : {:?}", x);
                 None

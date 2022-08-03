@@ -3,9 +3,11 @@ mod utility;
 
 use std::fmt::{Display, Formatter};
 use crate::network_components::ethernet_packet::EtherPacket;
-use pcap::{Device, Packet};
-use std::io;
-use std::io::Write;
+use pcap::{Capture, Device, Packet};
+use std::{io, thread};
+use std::io::{Write};
+use std::sync::{Arc, Condvar, Mutex};
+use std::thread::JoinHandle;
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -16,6 +18,10 @@ pub struct PacketSnooper {
     pub current_interface: Option<Device>,
     time_interval: Duration,
     file_name: String,
+    stop_thread: Arc<Mutex<bool>>,
+    stop_thread_cv: Arc<Condvar>,
+    end_thread: Arc<Mutex<bool>>,
+    thread: Option<JoinHandle<()>>,
 }
 
 impl PacketSnooper {
@@ -25,27 +31,59 @@ impl PacketSnooper {
             current_interface: None,
             time_interval: Duration::from_secs(60),
             file_name: "output.txt".to_owned(),
+            stop_thread: Arc::new(Mutex::new(false)),
+            stop_thread_cv: Arc::new(Condvar::new()),
+            end_thread: Arc::new(Mutex::new(false)),
+            thread: Option::from(thread::spawn(move || {})),
         }
     }
 
     pub fn start(&mut self) {
+        *self.stop_thread.lock().unwrap() = false;
+        *self.end_thread.lock().unwrap() = false;
+        let stop_thread = self.stop_thread.clone();
+        let stop_thread_cv = self.stop_thread_cv.clone();
+        let end_thread = self.end_thread.clone();
+
+        self.thread = Option::from(thread::spawn(move || {
+            let mut i = 0;
+            loop {
+                thread::sleep(Duration::from_secs(1));
+                if *end_thread.lock().unwrap() == true {
+                    return;
+                }
+                let mut stop_flag = *stop_thread.lock().unwrap();
+                while stop_flag == true {
+                    stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
+                }
+                println!("working...{}", i);
+                i += 1;
+            }
+        }));
         self.state = State::Working;
-        //test_simple_read_packets();
     }
 
     pub fn stop(&mut self) {
+        *self.stop_thread.lock().unwrap() = true;
+        self.stop_thread_cv.notify_one();
         self.state = State::Stopped;
     }
 
     pub fn resume(&mut self) {
+        *self.stop_thread.lock().unwrap() = false;
+        self.stop_thread_cv.notify_one();
         self.state = State::Working;
     }
 
     pub fn end(&mut self) {
+        *self.end_thread.lock().unwrap() = true;
+        self.thread.take().map(JoinHandle::join);
         self.state = State::Ready;
     }
 
     pub fn abort(&mut self) {
+        *self.end_thread.lock().unwrap() = true;
+        self.thread.take().map(JoinHandle::join);
         self.state = State::ConfigDevice;
     }
 
@@ -83,13 +121,16 @@ impl Display for PacketSnooper {
             false => { write!(f, "[interface: None]") }
         }.unwrap();
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
-        write!(f, "\nTime inteval before report generation : {:?}", self.time_interval).unwrap();
+        write!(f, "\nTime interval before report generation : {:?}", self.time_interval).unwrap();
         write!(f, "\nFile name Target for report generation: {:?}", self.file_name)
     }
 }
 
 pub fn test_simple_read_packets() {
-    let mut cap = Device::lookup().unwrap().open().unwrap();
+    let main_device = Device::lookup().unwrap();
+    let mut cap = Capture::from_device(main_device).unwrap()
+            .promisc(true)
+            .open().unwrap();
 
     while let Ok(packet) = cap.next() {
         decode_packet(packet);
