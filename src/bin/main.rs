@@ -21,7 +21,7 @@ fn main() {
                     Ok(dev) => {
                         packet_snooper.set_device(dev);
                     },
-                    Err(e) => { println!("{}", e); },
+                    Err(e) => { println!("{}. Retry. Press any key to continue.", e);  wait_for_key_press(); },
                 }
             }
             State::ConfigTimeInterval => {
@@ -31,7 +31,7 @@ fn main() {
                     Ok(t) => {
                         packet_snooper.set_time_interval(Duration::from_secs(t as u64));
                     },
-                    Err(e) => { println!("{}", e); },
+                    Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                 }
             }
             State::ConfigFile => {
@@ -40,15 +40,42 @@ fn main() {
                 match file_name {
                     Ok(f) => {
                         packet_snooper.set_file_name(&f);
+                        //TODO create file here or in the above function "packet_snooper::set_file_name(&f)"
                     },
                     Err(e) => { println!("{}", e); },
                 }
             }
             State::Ready => {
                 print_ready_menu();
-                let _command: Result<String, _> = get_data_from_user();
-                println!("command: {}", _command.unwrap());
-                break;
+                let command: Result<String, _> = get_data_from_user();
+
+                match command {
+                    Ok(cmd) => {
+                        match cmd.to_lowercase().as_str() {
+                            "start" => { packet_snooper.start(); },
+                            "exit" => { return; }
+                            _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
+                        };
+                    },
+                    Err(_) => { println!("Something went wrong") }
+                };
+            },
+            State::Working => {
+                print_working_menu();
+                let command: Result<String, _> = get_data_from_user();
+
+                match command {
+                    Ok(cmd) => {
+                        match cmd.to_lowercase().as_str() {
+                            "abort" => { packet_snooper.abort(); },
+                            "end" => { packet_snooper.end(); },
+                            "stop" => { packet_snooper.stop(); },
+                            "exit" => { return; }
+                            _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
+                        };
+                    },
+                    Err(_) => { println!("Something went wrong") }
+                };
             }
             _ => {
                 break;
@@ -64,13 +91,18 @@ fn get_data_from_user() -> Result<String, Error> {
     Ok(buffer)
 }
 
+fn wait_for_key_press() {
+    let mut buffer = String::new();
+    io::stdin().lock().read_line(&mut buffer).expect("Something went wrong with user input.");
+}
+
 fn retrieve_device(interface_name: &str) -> Result<Device, &'static str> {
     for device in Device::list().unwrap() {
         if interface_name == device.name {
             return Ok(device);
         }
     }
-    Err("unable to find device with the specified interface name")
+    Err("unable to find device with the specified interface name ")
 }
 
 fn print_interfaces() -> () {
@@ -126,8 +158,23 @@ fn print_config_file_menu() {
 fn print_ready_menu() {
     print_main_menu();
     println!("Packet Snooper is ready");
+    println!("- start");
+    println!("- exit");
     println!("------------------------");
-    println!("Command :");
+    println!("Type command :");
+    print!(">>> ");
+    io::stdout().flush().unwrap();
+}
+
+fn print_working_menu() {
+    print_main_menu();
+    println!("Packet Snooper is working");
+    println!("- abort (back to configuration)");
+    println!("- end (back to ready state)");
+    println!("- stop");
+    println!("- exit");
+    println!("------------------------");
+    println!("Type command :");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }

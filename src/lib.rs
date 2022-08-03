@@ -9,7 +9,7 @@ use std::io::Write;
 use std::time::Duration;
 
 #[derive(Debug)]
-pub enum State { ConfigDevice, ConfigTimeInterval, ConfigFile, Ready, Working, Stopped, End }
+pub enum State { ConfigDevice, ConfigTimeInterval, ConfigFile, Ready, Working, Stopped }
 
 pub struct PacketSnooper {
     pub state: State,
@@ -26,6 +26,27 @@ impl PacketSnooper {
             time_interval: Duration::from_secs(60),
             file_name: "output.txt".to_owned(),
         }
+    }
+
+    pub fn start(&mut self) {
+        self.state = State::Working;
+        //test_simple_read_packets();
+        println!("working...");
+    }
+
+    pub fn stop(&mut self) {
+        self.state = State::Stopped;
+        println!("stopped...");
+    }
+
+    pub fn end(&mut self) {
+        self.state = State::Ready;
+        println!("ended...");
+    }
+
+    pub fn abort(&mut self) {
+        self.state = State::ConfigDevice;
+        println!("aborted...");
     }
 
     pub fn set_device(&mut self, device: Device) {
@@ -62,7 +83,7 @@ impl Display for PacketSnooper {
             false => { write!(f, "[interface: None]") }
         }.unwrap();
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
-        write!(f, "\nTime inteval before report generation : {:?}", self.time_interval);
+        write!(f, "\nTime inteval before report generation : {:?}", self.time_interval).unwrap();
         write!(f, "\nFile name Target for report generation: {:?}", self.file_name)
     }
 }
