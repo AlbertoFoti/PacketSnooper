@@ -1,8 +1,8 @@
-use crate::network_components::ipv4address::IPv4Address;
 use crate::network_components::tcp_packet::TcpPacket;
 use crate::network_components::upd_packet::UdpPacket;
 use crate::utility;
 use std::fmt::{Display, Formatter};
+use std::net::{Ipv4Addr};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -24,8 +24,8 @@ pub struct IPv4Packet {
     pub ttl: u8,
     pub protocol_type: Option<IpProtocolType>,
     pub header_checksum: [u8; 2],
-    pub ip_addr_src: IPv4Address,
-    pub ip_addr_dst: IPv4Address,
+    pub ip_addr_src: Ipv4Addr,
+    pub ip_addr_dst: Ipv4Addr,
     pub options: Vec<u8>,
     pub payload: Vec<u8>,
 }
@@ -44,8 +44,8 @@ impl IPv4Packet {
             ttl: ipv4_data_in_u8[8],
             protocol_type: IPv4Packet::to_protocol_type(ipv4_data_in_u8[9]),
             header_checksum: utility::clone_into_array(&ipv4_data_in_u8[10..12]),
-            ip_addr_src: IPv4Address::new(&ipv4_data_in_u8[12..16]),
-            ip_addr_dst: IPv4Address::new(&ipv4_data_in_u8[16..20]),
+            ip_addr_src: Ipv4Addr::new(ipv4_data_in_u8[12], ipv4_data_in_u8[13], ipv4_data_in_u8[14], ipv4_data_in_u8[15]),
+            ip_addr_dst: Ipv4Addr::new(ipv4_data_in_u8[16], ipv4_data_in_u8[17], ipv4_data_in_u8[18], ipv4_data_in_u8[19]),
             options: IPv4Packet::options(IPv4Packet::calc_header_length(header_nibble), &ipv4_data_in_u8[..]),
             payload: IPv4Packet::payload(IPv4Packet::calc_header_length(header_nibble), &ipv4_data_in_u8[..]),
         }

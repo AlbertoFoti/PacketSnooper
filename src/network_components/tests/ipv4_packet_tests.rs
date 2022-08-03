@@ -1,5 +1,5 @@
+use std::net::Ipv4Addr;
 use crate::network_components::ipv4_packet::{IpProtocolType, IPv4Packet};
-use crate::network_components::ipv4address::IPv4Address;
 use crate::network_components::tests::{IPV4_DATA_IN_U8, IPV4_DATA_IN_U8_WITH_OPTIONS};
 
 #[test]
@@ -18,8 +18,8 @@ fn new_ipv4_packet() {
     assert_eq!(ipv4_packet.ttl, 64);
     assert_eq!(ipv4_packet.protocol_type.unwrap(), IpProtocolType::UDP);
     assert_eq!(ipv4_packet.header_checksum, [128, 107]);
-    assert_eq!(ipv4_packet.ip_addr_src, IPv4Address::new(&[192, 168, 1, 90]));
-    assert_eq!(ipv4_packet.ip_addr_dst, IPv4Address::new(&[142, 250, 184, 42]));
+    assert_eq!(ipv4_packet.ip_addr_src, Ipv4Addr::new(192, 168, 1, 90));
+    assert_eq!(ipv4_packet.ip_addr_dst, Ipv4Addr::new(142, 250, 184, 42));
     assert_eq!(ipv4_packet.options, Vec::new());
     assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8[20..]));
 }
@@ -40,8 +40,8 @@ fn ipv4_options() {
     assert_eq!(ipv4_packet.ttl, 64);
     assert_eq!(ipv4_packet.protocol_type.unwrap(), IpProtocolType::UDP);
     assert_eq!(ipv4_packet.header_checksum, [128, 107]);
-    assert_eq!(ipv4_packet.ip_addr_src, IPv4Address::new(&[192, 168, 1, 90]));
-    assert_eq!(ipv4_packet.ip_addr_dst, IPv4Address::new(&[142, 250, 184, 42]));
+    assert_eq!(ipv4_packet.ip_addr_src, Ipv4Addr::new(192, 168, 1, 90));
+    assert_eq!(ipv4_packet.ip_addr_dst, Ipv4Addr::new(142, 250, 184, 42));
     assert_eq!(ipv4_packet.options, Vec::from(&IPV4_DATA_IN_U8_WITH_OPTIONS[20..40]));
     assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8_WITH_OPTIONS[40..]));
 }
