@@ -35,9 +35,10 @@ impl Display for UdpPacket {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
         write!(
             f,
-            ": {} -> {}",
+            ": {} -> {}\n   > [{}]",
             utility::to_u16(&self.src_port),
-            utility::to_u16(&self.dst_port)
+            utility::to_u16(&self.dst_port),
+            utility::to_compact_hex(&self.payload)
         )
     }
 }

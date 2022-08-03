@@ -10,8 +10,8 @@ A Rust cross-platform cli packet analyzer
     future support: MPLS unicast, MPLS multicast
 ### Layer 4 ("Protocol Type" field of L3 protocols)
     full-support: TCP, UDP
-    identification: (). Others: (IGMP, ICMP)
-    future support: ()
+    identification: (). Others: (IGMP, ICMPv4)
+    future support: (ICMPv6)
 ### Upper Layers
     full-support: ()
     identification: ()
