@@ -12,3 +12,6 @@ pub mod ipv4_packet_tests;
 pub mod tcp_packet_tests;
 #[cfg(test)]
 pub mod udp_packet_tests;
+
+#[cfg(test)]
+pub mod upper_layer_services_tests;

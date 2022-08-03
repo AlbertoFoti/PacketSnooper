@@ -14,7 +14,8 @@ A Rust cross-platform cli packet analyzer
     future support: (ICMPv6)
 ### Upper Layers
     full-support: ()
-    identification: ()
+    identification: (FTP=20, SSH=22, SMPT=23, DNS=53, HTTP=80, POP3=110
+                     SFTP=115, SNMP=161, BGP=179, HTTPS=443, )
     future support: ()
 
 ## Technologies Used

@@ -60,7 +60,7 @@ impl IPv4Packet {
     }
 
     pub fn total_length(&self) -> u16 {
-        ((self.total_length[0] as u16) << 8) | self.total_length[1] as u16
+        utility::to_u16(&self.total_length)
     }
 
     pub fn payload(header_length: u16, ipv4_data_in_u8: &[u8]) -> Vec<u8> {
@@ -93,7 +93,7 @@ impl Display for IPv4Packet {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Blue))).unwrap();
         write!(f, "IPv4     ").unwrap();
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
-        write!(f, ": {} -> {}\n   > [version: {}, header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ] ",
+        write!(f, ": {} -> {}\n > [version: {}, header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ] ",
             self.ip_addr_src,
             self.ip_addr_dst,
             self.version,
