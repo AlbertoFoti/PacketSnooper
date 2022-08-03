@@ -7,7 +7,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum IpProtocolType {
-    ICMP,
+    ICMPv4,
     IGMP,
     TCP,
     UDP,
@@ -73,7 +73,7 @@ impl IPv4Packet {
 
     pub fn to_protocol_type(protocol_type_in_u8: u8) -> Option<IpProtocolType> {
         match protocol_type_in_u8 {
-            1 => return Some(IpProtocolType::ICMP),
+            1 => return Some(IpProtocolType::ICMPv4),
             2 => return Some(IpProtocolType::IGMP),
             6 => return Some(IpProtocolType::TCP),
             17 => return Some(IpProtocolType::UDP),
@@ -109,7 +109,7 @@ impl Display for IPv4Packet {
         ).unwrap();
 
         match self.protocol_type {
-            Some(IpProtocolType::ICMP) => {
+            Some(IpProtocolType::ICMPv4) => {
                 write!(f, "ICMP     : Unknown Details")
             },
             Some(IpProtocolType::IGMP) => {
