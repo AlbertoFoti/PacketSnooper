@@ -17,19 +17,21 @@ fn main() {
                 print_interface_menu();
                 let interface_name = get_data_from_user().expect("Error while getting interface name from user");
 
-                match retrieve_device(interface_name.as_str()) {
-                    Ok(dev) => {
-                        packet_snooper.set_device(dev);
-                    },
+                match packet_snooper.set_device(interface_name.as_str()) {
+                    Ok(_) => { continue; },
                     Err(e) => { println!("{}. Retry. Press any key to continue.", e);  wait_for_key_press(); },
                 }
             }
             State::ConfigTimeInterval => {
                 print_time_interval_menu();
                 let time_interval: Result<u64, _> = get_data_from_user().expect("Error while getting time interval from user").parse::<u64>();
+
                 match time_interval {
                     Ok(t) => {
-                        packet_snooper.set_time_interval(Duration::from_secs(t as u64));
+                        match packet_snooper.set_time_interval(Duration::from_secs(t as u64)) {
+                            Ok(_) => (),
+                            Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+                        }
                     },
                     Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                 }
@@ -108,15 +110,6 @@ fn get_data_from_user() -> Result<String, Error> {
 fn wait_for_key_press() {
     let mut buffer = String::new();
     io::stdin().lock().read_line(&mut buffer).expect("Something went wrong with user input.");
-}
-
-fn retrieve_device(interface_name: &str) -> Result<Device, &'static str> {
-    for device in Device::list().unwrap() {
-        if interface_name == device.name {
-            return Ok(device);
-        }
-    }
-    Err("unable to find device with the specified interface name ")
 }
 
 fn print_interfaces() -> () {

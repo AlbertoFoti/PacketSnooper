@@ -1,3 +1,10 @@
+//! # packet_snooper
+//!
+//! `packet_snooper` is a multiplatform library to analyze network traffic data. It's available on Windows and UNIX-like Operating Systems such as Linux and macOS.
+
+/// Adds one to the number given.
+// --snip--
+
 mod network_components;
 mod utility;
 
@@ -10,14 +17,40 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-#[derive(Debug)]
-pub enum State { ConfigDevice, ConfigTimeInterval, ConfigFile, Ready, Working, Stopped }
+#[derive(Debug, PartialEq)]
+/// Internal PacketSnooper States to manage operations.
+pub enum State {
+    /// Device Selection Stage: Select an interface to be analyzed.
+    ConfigDevice,
+    /// Time Interval Configuration Stage: Insert time until report generation.
+    ConfigTimeInterval,
+    /// Filename Configuration Stage: Insert the name of the target file (for report generation).
+    ConfigFile,
+    /// Ready for network traffic analysis.
+    Ready,
+    /// Analyzing network traffic.
+    Working,
+    /// Network traffic analysis is stopped.
+    Stopped,
+}
 
+/// Struct to manage network analysis.
+///
+/// # Examples
+///
+/// ```
+/// let mut packet_snooper = PacketSnooper::new();
+/// match packet_snooper.set_device(interface_name.as_str()) {
+///     Ok(_) => (),
+///     Err(e) => (),
+/// }
+///
+/// ```
 pub struct PacketSnooper {
     pub state: State,
     pub current_interface: Option<Device>,
-    time_interval: Duration,
-    file_name: String,
+    pub time_interval: Duration,
+    pub file_name: String,
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
     end_thread: Arc<Mutex<bool>>,
@@ -87,19 +120,75 @@ impl PacketSnooper {
         self.state = State::ConfigDevice;
     }
 
-    pub fn set_device(&mut self, device: Device) {
-        self.current_interface = Option::from(device);
-        self.state = State::ConfigTimeInterval;
+    /// Set *`network interface`* (device) inside PacketSnooper struct.
+    /// It's part of the configuration phase.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// match packet_snooper.set_device(interface_name.as_str()) {
+    ///     Ok(_) => (),
+    ///     Err(e) => (),
+    /// }
+    ///
+    /// ```
+    pub fn set_device(&mut self, interface_name: &str) -> Result<(), &'static str>{
+        let device = PacketSnooper::retrieve_device(interface_name);
+        match device {
+            Ok(dev) => {
+                self.state = State::ConfigTimeInterval;
+                self.current_interface = Option::from(dev);
+                Ok(())
+            },
+            Err(e) => { Err(e) }
+        }
     }
 
-    pub fn set_time_interval(&mut self, time_interval: Duration) {
-        self.time_interval = time_interval;
-        self.state = State::ConfigFile;
+    /// Set *`time interval`* (for report generation) inside PacketSnooper struct.
+    /// It's part of the configuration phase.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let time_interval: Result<u64, _> = ...;
+    ///
+    /// match time_interval {
+    ///     Ok(t) => {
+    ///         packet_snooper.set_time_interval(Duration::from_secs(t as u64));
+    ///     },
+    ///     Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+    /// }
+    ///
+    /// ```
+    /// ```
+    /// let time_interval: u64 = 75;
+    /// packet_snooper.set_time_interval(Duration::from_secs(time_interval));
+    /// ```
+    /// ```
+    /// packet_snooper.set_time_interval(Duration::from_secs(75));
+    /// ```
+    pub fn set_time_interval(&mut self, time_interval: Duration) -> Result<(), &'static str> {
+        if self.state == State::ConfigDevice {
+            self.time_interval = time_interval;
+            self.state = State::ConfigFile;
+            Ok(())
+        } else {
+            Err("Invalid call on set_time_interval when in an illegal state.")
+        }
     }
 
     pub fn set_file_name(&mut self, file_name: &str) {
         self.file_name = file_name.to_owned();
         self.state = State::Ready;
+    }
+
+    fn retrieve_device(interface_name: &str) -> Result<Device, &'static str> {
+        for device in Device::list().unwrap() {
+            if interface_name == device.name {
+                return Ok(device);
+            }
+        }
+        Err("unable to find device with the specified interface name ")
     }
 }
 
