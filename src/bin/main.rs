@@ -35,9 +35,19 @@ fn main() {
                 }
             }
             State::ConfigFile => {
-                break;
+                print_config_file_menu();
+                let file_name: Result<String, _> = get_data_from_user();
+                match file_name {
+                    Ok(f) => {
+                        packet_snooper.set_file_name(&f);
+                    },
+                    Err(e) => { println!("{}", e); },
+                }
             }
             State::Ready => {
+                print_ready_menu();
+                let _command: Result<String, _> = get_data_from_user();
+                println!("command: {}", _command.unwrap());
                 break;
             }
             _ => {
@@ -100,6 +110,24 @@ fn print_time_interval_menu() {
     println!("Time interval selection");
     println!("------------------------");
     println!("Insert the time interval until report generation (in seconds, 60s by default) :");
+    print!(">>> ");
+    io::stdout().flush().unwrap();
+}
+
+fn print_config_file_menu() {
+    print_main_menu();
+    println!("File Configuration");
+    println!("------------------------");
+    println!("Insert the file name you want as report generation target (\"output.txt\" by default) :");
+    print!(">>> ");
+    io::stdout().flush().unwrap();
+}
+
+fn print_ready_menu() {
+    print_main_menu();
+    println!("Packet Snooper is ready");
+    println!("------------------------");
+    println!("Command :");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }

@@ -14,7 +14,8 @@ pub enum State { ConfigDevice, ConfigTimeInterval, ConfigFile, Ready, Working, S
 pub struct PacketSnooper {
     pub state: State,
     pub current_interface: Option<Device>,
-    pub time_interval: Duration,
+    time_interval: Duration,
+    file_name: String,
 }
 
 impl PacketSnooper {
@@ -23,6 +24,7 @@ impl PacketSnooper {
             state: State::ConfigDevice,
             current_interface: None,
             time_interval: Duration::from_secs(60),
+            file_name: "output.txt".to_owned(),
         }
     }
 
@@ -34,6 +36,11 @@ impl PacketSnooper {
     pub fn set_time_interval(&mut self, time_interval: Duration) {
         self.time_interval = time_interval;
         self.state = State::ConfigFile;
+    }
+
+    pub fn set_file_name(&mut self, file_name: &str) {
+        self.file_name = file_name.to_owned();
+        self.state = State::Ready;
     }
 }
 
@@ -55,7 +62,8 @@ impl Display for PacketSnooper {
             false => { write!(f, "[interface: None]") }
         }.unwrap();
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
-        write!(f, "\nTime inteval before report generation: {:?}", self.time_interval)
+        write!(f, "\nTime inteval before report generation : {:?}", self.time_interval);
+        write!(f, "\nFile name Target for report generation: {:?}", self.file_name)
     }
 }
 
