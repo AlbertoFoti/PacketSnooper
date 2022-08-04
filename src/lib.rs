@@ -90,8 +90,9 @@
 //! ```
 
 // Easy tasks
-// TODO : complete documentation
+// TODO : complete documentation and check for correctness
 // TODO : in-depth testing
+// TODO : error handling
 
 // Major tasks
 // TODO : timer for report generation implemented
@@ -101,12 +102,8 @@
 // TODO : filters
 // TODO : --verbose, --quiet report type
 
-// Maintenance
-// TODO : check documentation correctness
-// TODO : refactor of network components struct and modules
-
 // Fixes
-// TODO : issue when ending thread. Stuck inside network receiver.
+// TODO :
 
 extern crate core;
 
@@ -117,10 +114,34 @@ use std::fmt::{Display, Formatter};
 use crate::network_components::ethernet_packet::EtherPacket;
 use pcap::{Capture, Device, Packet};
 use std::{io, thread};
+use std::error::Error;
 use std::io::{Write};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::{JoinHandle};
 use std::time::Duration;
+
+#[derive(Debug)]
+/// Packet Snooper custom Error type PSError.
+pub struct PSError {
+    /// Message describing the error.
+    message: String,
+}
+
+impl PSError {
+    pub fn new(msg: &str) -> Self {
+        PSError { message: msg.to_string() }
+    }
+}
+
+impl Display for PSError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "PSError: {}", self.message)
+    }
+}
+
+impl Error for PSError {}
+
+type Result<T> = std::result::Result<T, PSError>;
 
 #[derive(Debug, PartialEq)]
 /// Internal PacketSnooper States to manage operations.
@@ -214,7 +235,7 @@ impl PacketSnooper {
     ///             time_interval,
     ///             file_name).expect("Something went wrong.");
     /// ```
-    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_name: &str) -> Result<PacketSnooper, &'static str> {
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_name: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
         self.set_file_name(file_name)?;
@@ -245,7 +266,7 @@ impl PacketSnooper {
     /// }
     ///
     /// ```
-    pub fn set_device(&mut self, interface_name: &str) -> Result<(), &'static str> {
+    pub fn set_device(&mut self, interface_name: &str) -> Result<()> {
         if self.state == State::ConfigDevice {
             let device = PacketSnooper::retrieve_device(interface_name);
             match device {
@@ -257,7 +278,7 @@ impl PacketSnooper {
                 Err(e) => { Err(e) }
             }
         } else {
-            Err("Invalid call on set_device when in an illegal state.")
+            Err(PSError::new("Invalid call on set_device when in an illegal state."))
         }
     }
 
@@ -288,13 +309,13 @@ impl PacketSnooper {
     /// }
     /// ```
     ///
-    pub fn set_time_interval(&mut self, time_interval: u64) -> Result<(), &'static str> {
+    pub fn set_time_interval(&mut self, time_interval: u64) -> Result<()> {
         if self.state == State::ConfigTimeInterval {
             self.time_interval = Duration::from_secs(time_interval);
             self.state = State::ConfigFile;
             Ok(())
         } else {
-            Err("Invalid call on set_time_interval when in an illegal state.")
+            Err(PSError::new("Invalid call on set_time_interval when in an illegal state."))
         }
     }
 
@@ -329,14 +350,14 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn set_file_name(&mut self, file_name: &str) -> Result<(), &'static str>{
+    pub fn set_file_name(&mut self, file_name: &str) -> Result<()>{
         if self.state == State::ConfigFile {
             // TODO check filename is correct
             self.file_name = file_name.to_owned();
             self.state = State::Ready;
             Ok(())
         } else {
-            Err("Invalid call on set_file_name when in an illegal state.")
+            Err(PSError::new("Invalid call on set_file_name when in an illegal state."))
         }
     }
 
@@ -362,8 +383,8 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn start(&mut self) -> Result<(), &'static str> {
-        if self.state != State::Ready { return Err("Invalid call on start when in an illegal state"); }
+    pub fn start(&mut self) -> Result<()> {
+        if self.state != State::Ready { return Err(PSError::new("Invalid call on start when in an illegal state")); }
 
         let interface_name = self.current_interface.clone();
 
@@ -400,8 +421,8 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn stop(&mut self) -> Result<(), &'static str> {
-        if self.state != State::Working { return Err("Invalid call on stop when in an illegal state"); }
+    pub fn stop(&mut self) -> Result<()> {
+        if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state")); }
 
         *self.stop_thread.lock().unwrap() = true;
         self.stop_thread_cv.notify_one();
@@ -431,8 +452,8 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn resume(&mut self) -> Result<(), &'static str> {
-        if self.state != State::Stopped { return Err("Invalid call on resume when in an illegal state"); }
+    pub fn resume(&mut self) -> Result<()> {
+        if self.state != State::Stopped { return Err(PSError::new("Invalid call on resume when in an illegal state")); }
 
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_one();
@@ -462,8 +483,8 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn end(&mut self) -> Result<(), &'static str> {
-        if self.state != State::Working && self.state != State::Stopped { return Err("Invalid call on end when in an illegal state"); }
+    pub fn end(&mut self) -> Result<()> {
+        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on end when in an illegal state")); }
 
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
@@ -495,7 +516,7 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn abort(&mut self) -> Result<(), &'static str> {
+    pub fn abort(&mut self) -> Result<()> {
         // TODO return Err(e) when in an illegal state. Are there illegal states for abort???!
         *self.end_thread.lock().unwrap() = true;
         // TODO make sure nothing breaks here as take() is done in all states -> Test
@@ -504,13 +525,13 @@ impl PacketSnooper {
         Ok(())
     }
 
-    fn retrieve_device(interface_name: &str) -> Result<Device, &'static str> {
+    fn retrieve_device(interface_name: &str) -> Result<Device> {
         for device in Device::list().unwrap() {
             if interface_name == device.name {
                 return Ok(device);
             }
         }
-        Err("unable to find device with the specified interface name ")
+        Err(PSError::new("unable to find device with the specified interface name "))
     }
 
     fn network_analysis(&self, interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) -> impl FnOnce() -> () {
