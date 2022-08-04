@@ -89,8 +89,24 @@
 //! }
 //! ```
 
-mod network_components;
-mod utility;
+// Easy tasks
+// TODO : complete documentation
+// TODO : in-depth testing
+
+// Major tasks
+// TODO : timer for report generation implemented
+// TODO : file report generation
+
+// Advanced (optional)
+// TODO : filters
+// TODO : --verbose, --quiet report type
+
+// Maintenance
+// TODO : check documentation correctness
+// TODO : refactor of network components struct and modules
+
+pub mod network_components;
+pub mod utility;
 
 use std::fmt::{Display, Formatter};
 use crate::network_components::ethernet_packet::EtherPacket;
@@ -148,10 +164,15 @@ pub enum State {
 ///             file_name).expect("Something went wrong.");
 /// ```
 pub struct PacketSnooper {
+    /// Internal state (for configuration and management of operations purposes)
     pub state: State,
+    /// Interface name (as target of network traffic analysis)
     pub current_interface: String,
+    /// Time interval (until report generation)
     pub time_interval: Duration,
+    /// File name (as target of report generation)
     pub file_name: String,
+
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
     end_thread: Arc<Mutex<bool>>,
