@@ -507,26 +507,28 @@ impl PacketSnooper {
     }
 
     fn network_analysis(&self, interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) -> impl FnOnce() -> () {
+        let timeout = 50;
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
+                .timeout(timeout)
                 .open().unwrap();
 
         move || {
             loop {
                 if *end_thread.lock().unwrap() == true {
-                    return;
+                    break;
                 }
                 let mut stop_flag = *stop_thread.lock().unwrap();
                 while stop_flag == true {
                     stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
                     cap = Capture::from_device(Device::from(interface_name.as_str())).unwrap()
                             .promisc(true)
+                            .timeout(timeout)
                             .open().unwrap();
                 }
                 if let Ok(packet) = cap.next() {
                     PacketSnooper::decode_packet(packet);
                 }
-                thread::sleep(Duration::from_secs(2));
             }
         }
     }

@@ -1,23 +1,24 @@
 use crate::utility;
 use std::fmt::{Display, Formatter};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
-use crate::network_components::upper_layer_services::{print_upper_layer, to_upper_layer_service, UpperLayerService};
+use crate::network_components::upper_layer_services::{known_port, print_upper_layer, UpperLayerService};
 
 pub struct TcpPacket {
-    pub src_port: [u8; 2],
-    pub dst_port: [u8; 2],
-    pub upper_layer_service: Option<UpperLayerService>,
+    pub src_port: u16,
+    pub dst_port: u16,
+    pub upper_layer_service: UpperLayerService,
     pub payload: Vec<u8>,
 }
 
 impl TcpPacket {
     pub fn new(tcp_data_in_u8: &[u8]) -> TcpPacket {
-        let src_port = utility::clone_into_array(&tcp_data_in_u8[0..2]);
-        let dst_port = utility::clone_into_array(&tcp_data_in_u8[2..4]);
+        let src_port = u16::from_be_bytes((&tcp_data_in_u8[0..2]).try_into().unwrap());
+        let dst_port = u16::from_be_bytes((&tcp_data_in_u8[2..4]).try_into().unwrap());
+
         TcpPacket {
             src_port,
             dst_port,
-            upper_layer_service: to_upper_layer_service(utility::to_u16(&src_port), utility::to_u16(&dst_port)),
+            upper_layer_service: UpperLayerService::from(known_port(src_port, dst_port)),
             payload: Vec::from(&tcp_data_in_u8[4..]),
         }
     }
@@ -33,8 +34,8 @@ impl Display for TcpPacket {
         write!(
             f,
             ": {} -> {}\n",
-            utility::to_u16(&self.src_port),
-            utility::to_u16(&self.dst_port)
+            self.src_port,
+            self.dst_port,
         ).unwrap();
 
         print_upper_layer(f, self.upper_layer_service).unwrap();

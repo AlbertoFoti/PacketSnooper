@@ -1,6 +1,5 @@
 use crate::network_components::tcp_packet::TcpPacket;
 use crate::network_components::upd_packet::UdpPacket;
-use crate::utility;
 use std::fmt::{Display, Formatter};
 use std::net::{Ipv4Addr};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -17,13 +16,13 @@ pub struct IPv4Packet {
     pub version: u8,
     pub header_length: u8,
     pub diff_serv: u8,
-    pub total_length: [u8; 2],
-    pub identification: [u8; 2],
+    pub total_length: u16,
+    pub identification: u16,
     pub flags: u8,
     pub fragmentation_offset: u8,
     pub ttl: u8,
     pub protocol_type: Option<IpProtocolType>,
-    pub header_checksum: [u8; 2],
+    pub header_checksum: u16,
     pub ip_addr_src: Ipv4Addr,
     pub ip_addr_dst: Ipv4Addr,
     pub options: Vec<u8>,
@@ -37,13 +36,13 @@ impl IPv4Packet {
             version: ipv4_data_in_u8[0] >> 4,
             header_length: header_nibble,
             diff_serv: ipv4_data_in_u8[1],
-            total_length: utility::clone_into_array(&ipv4_data_in_u8[2..4]),
-            identification: utility::clone_into_array(&ipv4_data_in_u8[4..6]),
+            total_length: u16::from_be_bytes((&ipv4_data_in_u8[2..4]).try_into().unwrap()),
+            identification: u16::from_be_bytes((&ipv4_data_in_u8[4..6]).try_into().unwrap()),
             flags: ipv4_data_in_u8[6],
             fragmentation_offset: ipv4_data_in_u8[7],
             ttl: ipv4_data_in_u8[8],
             protocol_type: IPv4Packet::to_protocol_type(ipv4_data_in_u8[9]),
-            header_checksum: utility::clone_into_array(&ipv4_data_in_u8[10..12]),
+            header_checksum: u16::from_be_bytes((&ipv4_data_in_u8[10..12]).try_into().unwrap()),
             ip_addr_src: Ipv4Addr::new(ipv4_data_in_u8[12], ipv4_data_in_u8[13], ipv4_data_in_u8[14], ipv4_data_in_u8[15]),
             ip_addr_dst: Ipv4Addr::new(ipv4_data_in_u8[16], ipv4_data_in_u8[17], ipv4_data_in_u8[18], ipv4_data_in_u8[19]),
             options: IPv4Packet::options(IPv4Packet::calc_header_length(header_nibble), &ipv4_data_in_u8[..]),
@@ -57,10 +56,6 @@ impl IPv4Packet {
 
     pub fn header_length(&self) -> u16 {
         self.header_length as u16 * 32 / 8
-    }
-
-    pub fn total_length(&self) -> u16 {
-        utility::to_u16(&self.total_length)
     }
 
     pub fn payload(header_length: u16, ipv4_data_in_u8: &[u8]) -> Vec<u8> {
@@ -100,12 +95,12 @@ impl Display for IPv4Packet {
             self.version,
             self.header_length(),
             self.diff_serv,
-            self.total_length(),
-            utility::to_u16(&self.identification),
+            self.total_length,
+            self.identification,
             self.flags,
             self.fragmentation_offset,
             self.ttl,
-            utility::to_u16(&self.header_checksum),
+            self.header_checksum,
         ).unwrap();
 
         match self.protocol_type {

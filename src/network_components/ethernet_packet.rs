@@ -47,26 +47,13 @@ impl Display for EtherPacket {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green))).unwrap();
         write!(f, "Ethernet ").unwrap();
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
-        write!(
-            f,
-            ": {} -> {} \n",
-            self.mac_addr_dst, self.mac_addr_src
-        )
-        .unwrap();
+        write!(f, ": {} -> {} \n", self.mac_addr_dst, self.mac_addr_src).unwrap();
 
         match self.ether_type {
-            Some(EtherType::IPV4) => {
-                write!(f, "{}", IPv4Packet::new(self.payload.as_slice()))
-            },
-            Some(EtherType::IPV6) => {
-                write!(f, "IPv6     : Unknown Details")
-            },
-            Some(EtherType::ARP) => {
-                write!(f, "ARP      : Unknown Details")
-            },
-            _ => {
-                write!(f, "Other Protocol incapsulated in Ethernet frame (Unknown Protocol)")
-            }
+            Some(EtherType::IPV4) => { write!(f, "{}", IPv4Packet::new(self.payload.as_slice())) },
+            Some(EtherType::IPV6) => { write!(f, "IPv6     : Unknown Details") },
+            Some(EtherType::ARP) => { write!(f, "ARP      : Unknown Details") },
+            _ => { write!(f, "Other Protocol incapsulated in Ethernet frame (Unknown Protocol)") }
         }
     }
 }

@@ -1,45 +1,45 @@
-use crate::network_components::upper_layer_services::{to_upper_layer_service, UpperLayerService};
+use crate::network_components::upper_layer_services::{known_port, UpperLayerService};
 
 #[test]
-pub fn to_upper_layer_services_test() {
-    assert_eq!(to_upper_layer_service(20, 4567).unwrap(), UpperLayerService::FTP);
-    assert_eq!(to_upper_layer_service(4567, 20).unwrap(), UpperLayerService::FTP);
+pub fn from_known_port_to_service_test() {
+    assert_eq!(UpperLayerService::from(known_port(20, 4567)), UpperLayerService::FTP);
+    assert_eq!(UpperLayerService::from(known_port(4567, 20)), UpperLayerService::FTP);
 
-    assert_eq!(to_upper_layer_service(22, 4567).unwrap(), UpperLayerService::SSH);
-    assert_eq!(to_upper_layer_service(4567, 22).unwrap(), UpperLayerService::SSH);
+    assert_eq!(UpperLayerService::from(known_port(22, 4567)), UpperLayerService::SSH);
+    assert_eq!(UpperLayerService::from(known_port(4567, 22)), UpperLayerService::SSH);
 
-    assert_eq!(to_upper_layer_service(23, 4567).unwrap(), UpperLayerService::SMTP);
-    assert_eq!(to_upper_layer_service(4567, 23).unwrap(), UpperLayerService::SMTP);
+    assert_eq!(UpperLayerService::from(known_port(23, 4567)), UpperLayerService::SMTP);
+    assert_eq!(UpperLayerService::from(known_port(4567, 23)), UpperLayerService::SMTP);
 
-    assert_eq!(to_upper_layer_service(53, 4567).unwrap(), UpperLayerService::DNS);
-    assert_eq!(to_upper_layer_service(4567, 53).unwrap(), UpperLayerService::DNS);
+    assert_eq!(UpperLayerService::from(known_port(53, 4567)), UpperLayerService::DNS);
+    assert_eq!(UpperLayerService::from(known_port(4567, 53)), UpperLayerService::DNS);
 
-    assert_eq!(to_upper_layer_service(80, 4567).unwrap(), UpperLayerService::HTTP);
-    assert_eq!(to_upper_layer_service(4567, 80).unwrap(), UpperLayerService::HTTP);
+    assert_eq!(UpperLayerService::from(known_port(80, 4567)), UpperLayerService::HTTP);
+    assert_eq!(UpperLayerService::from(known_port(4567, 80)), UpperLayerService::HTTP);
 
-    assert_eq!(to_upper_layer_service(110, 4567).unwrap(), UpperLayerService::POP3);
-    assert_eq!(to_upper_layer_service(4567, 110).unwrap(), UpperLayerService::POP3);
+    assert_eq!(UpperLayerService::from(known_port(110, 4567)), UpperLayerService::POP3);
+    assert_eq!(UpperLayerService::from(known_port(4567, 110)), UpperLayerService::POP3);
 
-    assert_eq!(to_upper_layer_service(115, 4567).unwrap(), UpperLayerService::SFTP);
-    assert_eq!(to_upper_layer_service(4567, 115).unwrap(), UpperLayerService::SFTP);
+    assert_eq!(UpperLayerService::from(known_port(115, 4567)), UpperLayerService::SFTP);
+    assert_eq!(UpperLayerService::from(known_port(4567, 115)), UpperLayerService::SFTP);
 
-    assert_eq!(to_upper_layer_service(161, 4567).unwrap(), UpperLayerService::SNMP);
-    assert_eq!(to_upper_layer_service(4567, 161).unwrap(), UpperLayerService::SNMP);
+    assert_eq!(UpperLayerService::from(known_port(161, 4567)), UpperLayerService::SNMP);
+    assert_eq!(UpperLayerService::from(known_port(4567, 161)), UpperLayerService::SNMP);
 
-    assert_eq!(to_upper_layer_service(179, 4567).unwrap(), UpperLayerService::BGP);
-    assert_eq!(to_upper_layer_service(4567, 179).unwrap(), UpperLayerService::BGP);
+    assert_eq!(UpperLayerService::from(known_port(179, 4567)), UpperLayerService::BGP);
+    assert_eq!(UpperLayerService::from(known_port(4567, 179)), UpperLayerService::BGP);
 
-    assert_eq!(to_upper_layer_service(443, 4567).unwrap(), UpperLayerService::HTTPS);
-    assert_eq!(to_upper_layer_service(4567, 443).unwrap(), UpperLayerService::HTTPS);
+    assert_eq!(UpperLayerService::from(known_port(443, 4567)), UpperLayerService::HTTPS);
+    assert_eq!(UpperLayerService::from(known_port(4567, 443)), UpperLayerService::HTTPS);
 }
 
 #[test]
-pub fn to_upper_layer_service_not_well_known() {
-    assert_eq!(to_upper_layer_service(2000, 2000).is_none(), true);
+pub fn from_unknown_port_to_service_test() {
+    assert_eq!(UpperLayerService::from(known_port(2000, 2000)), UpperLayerService::UNKNOWN);
 }
 
 #[test]
-pub fn to_upper_layer_service_unknown_protocol() {
-    assert_eq!(to_upper_layer_service(1023, 2000).is_none(), true);
-    assert_eq!(to_upper_layer_service(2000, 1023).is_none(), true);
+pub fn from_unknown_protocol_to_service_test() {
+    assert_eq!(UpperLayerService::from(known_port(1023, 2000)), UpperLayerService::UNKNOWN);
+    assert_eq!(UpperLayerService::from(known_port(2000, 1023)), UpperLayerService::UNKNOWN);
 }

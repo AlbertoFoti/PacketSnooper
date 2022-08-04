@@ -11,10 +11,6 @@ where
     a
 }
 
-pub fn to_u16(array: &[u8; 2]) -> u16 {
-    ((array[0] as u16) << 8) | array[1] as u16
-}
-
 pub fn to_compact_hex(vector_u8: &[u8]) -> String {
     const MAXIMUM_PRINTABLE_PAYLOAD : usize = 75;
 
