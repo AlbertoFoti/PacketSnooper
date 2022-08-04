@@ -268,15 +268,10 @@ impl PacketSnooper {
     /// ```
     pub fn set_device(&mut self, interface_name: &str) -> Result<()> {
         if self.state == State::ConfigDevice {
-            let device = PacketSnooper::retrieve_device(interface_name);
-            match device {
-                Ok(dev) => {
-                    self.state = State::ConfigTimeInterval;
-                    self.current_interface = dev.name.clone();
-                    Ok(())
-                }
-                Err(e) => { Err(e) }
-            }
+            let device = PacketSnooper::retrieve_device(interface_name)?;
+            self.state = State::ConfigTimeInterval;
+            self.current_interface = device.name.clone();
+            Ok(())
         } else {
             Err(PSError::new("Invalid call on set_device when in an illegal state."))
         }
