@@ -2,6 +2,10 @@
 //!
 //! `packet_snooper` is a multiplatform library to analyze network traffic data. It's available on Windows and UNIX-like Operating Systems such as Linux and macOS.
 //!
+//! It was developed as part of a University project (Politecnico of Turin, Italy. "System and Device Programming". Year 2022).
+//!
+//! ( credits: Alberto Foti, Samuele Giannetto, Simone Annecchini )
+//!
 //! # Let's get started! Simplified use of packet_snooper library
 //!
 //! ```
@@ -271,6 +275,9 @@ impl PacketSnooper {
     /// Set *`file name`* (as report generation target) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
+    /// Transitions from ConfigFile state to Ready state.
+    /// PacketSnooper is now configured and ready to analyze network traffic
+    ///
     /// # Examples
     ///
     /// Simplified call (without error handling)
@@ -307,7 +314,31 @@ impl PacketSnooper {
         }
     }
 
-    pub fn start(&mut self) {
+    /// *`start`* network traffic analysis inside PacketSnooper framework.
+    ///
+    /// Transitions from Ready state to Working state, spawning a worker thread able to analyze network traffic.
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// packet_snooper.start().unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid call on start when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.start() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn start(&mut self) -> Result<(), &'static str> {
+        if self.state != State::Ready { return Err("Invalid call on start when in an illegal state"); }
+
         *self.stop_thread.lock().unwrap() = false;
         *self.end_thread.lock().unwrap() = false;
         let stop_thread = self.stop_thread.clone();
@@ -330,30 +361,131 @@ impl PacketSnooper {
             }
         }));
         self.state = State::Working;
+        Ok(())
     }
 
-    pub fn stop(&mut self) {
+    /// *`stop`* network traffic analysis inside PacketSnooper framework.
+    ///
+    /// Transitions from Working state to Stopped state, temporarily halting all operations.
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// packet_snooper.stop().unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid call on stop when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.stop() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn stop(&mut self) -> Result<(), &'static str> {
+        if self.state != State::Working { return Err("Invalid call on stop when in an illegal state"); }
+
         *self.stop_thread.lock().unwrap() = true;
         self.stop_thread_cv.notify_one();
         self.state = State::Stopped;
+        Ok(())
     }
 
-    pub fn resume(&mut self) {
+    /// *`resume`* network traffic analysis inside PacketSnooper framework.
+    ///
+    /// Transitions from Stopped state to Working state, resuming all operations.
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// packet_snooper.resume().unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid call on resume when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.resume() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn resume(&mut self) -> Result<(), &'static str> {
+        if self.state != State::Stopped { return Err("Invalid call on resume when in an illegal state"); }
+
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_one();
         self.state = State::Working;
+        Ok(())
     }
 
-    pub fn end(&mut self) {
+    /// *`end`* network traffic analysis inside PacketSnooper framework.
+    ///
+    /// Transitions from Working/Stopped state to Ready state, halting and scrapping progresses, but keeping configuration info.
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// packet_snooper.end().unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid call on end when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.end() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn end(&mut self) -> Result<(), &'static str> {
+        if self.state != State::Working && self.state != State::Stopped { return Err("Invalid call on end when in an illegal state"); }
+
         *self.end_thread.lock().unwrap() = true;
         self.thread.take().map(JoinHandle::join);
         self.state = State::Ready;
+        Ok(())
     }
 
-    pub fn abort(&mut self) {
+    /// *`abort`* network traffic analysis and configuration inside PacketSnooper framework.
+    ///
+    /// Transitions from ??? state to ConfigDevice state, halting and scrapping progresses, including configuration info.
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// packet_snooper.abort().unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid call on abort when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.abort() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn abort(&mut self) -> Result<(), &'static str> {
+        // TODO return Err(e) when in an illegal state. Are there illegal states for abort???!
         *self.end_thread.lock().unwrap() = true;
+        // TODO make sure nothing breaks here as take() is done in all states -> Test
         self.thread.take().map(JoinHandle::join);
         self.state = State::ConfigDevice;
+        Ok(())
     }
 
     fn retrieve_device(interface_name: &str) -> Result<Device, &'static str> {
