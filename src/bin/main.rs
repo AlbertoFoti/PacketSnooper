@@ -7,12 +7,10 @@ use packet_snooper::{PacketSnooper, State};
 
 fn main() {
     let mut packet_snooper = PacketSnooper::new();
-    //packet_snooper::test_simple_read_packets();
+    println!("{}", packet_snooper);
 
     loop {
         clear_screen();
-        sleep(Duration::from_millis(100));
-        println!("{}", packet_snooper);
 
         match packet_snooper.state {
             State::ConfigDevice => {
@@ -101,6 +99,8 @@ fn main() {
                 };
             }
         }
+
+        sleep(Duration::from_millis(100));
     }
 }
 
