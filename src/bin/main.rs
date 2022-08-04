@@ -1,5 +1,6 @@
 use std::io;
 use std::io::{BufRead, Write};
+use std::thread::sleep;
 use std::time::Duration;
 use pcap::{Device, Error};
 use packet_snooper::{PacketSnooper, State};
@@ -10,6 +11,7 @@ fn main() {
 
     loop {
         clear_screen();
+        sleep(Duration::from_millis(50));
         println!("{}", packet_snooper);
 
         match packet_snooper.state {
@@ -41,8 +43,10 @@ fn main() {
                 let file_name: Result<String, _> = get_data_from_user();
                 match file_name {
                     Ok(f) => {
-                        packet_snooper.set_file_name(&f);
-                        //TODO create file here or in the above function "packet_snooper::set_file_name(&f)"
+                        match packet_snooper.set_file_name(&f) {
+                            Ok(_) => (),
+                            Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+                        }
                     },
                     Err(e) => { println!("{}", e); },
                 }
