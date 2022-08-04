@@ -1,35 +1,37 @@
 use std::io;
 use std::io::{BufRead, Write};
+use std::thread::sleep;
 use std::time::Duration;
 use pcap::{Device, Error};
 use packet_snooper::{PacketSnooper, State};
 
 fn main() {
     let mut packet_snooper = PacketSnooper::new();
-    //packet_snooper::test_simple_read_packets();
+    println!("{}", packet_snooper);
 
     loop {
         clear_screen();
-        println!("{}", packet_snooper);
 
         match packet_snooper.state {
             State::ConfigDevice => {
                 print_interface_menu();
                 let interface_name = get_data_from_user().expect("Error while getting interface name from user");
 
-                match retrieve_device(interface_name.as_str()) {
-                    Ok(dev) => {
-                        packet_snooper.set_device(dev);
-                    },
+                match packet_snooper.set_device(interface_name.as_str()) {
+                    Ok(_) => { continue; },
                     Err(e) => { println!("{}. Retry. Press any key to continue.", e);  wait_for_key_press(); },
                 }
             }
             State::ConfigTimeInterval => {
                 print_time_interval_menu();
                 let time_interval: Result<u64, _> = get_data_from_user().expect("Error while getting time interval from user").parse::<u64>();
+
                 match time_interval {
                     Ok(t) => {
-                        packet_snooper.set_time_interval(Duration::from_secs(t as u64));
+                        match packet_snooper.set_time_interval(t as u64) {
+                            Ok(_) => { continue; },
+                            Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+                        }
                     },
                     Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                 }
@@ -39,8 +41,10 @@ fn main() {
                 let file_name: Result<String, _> = get_data_from_user();
                 match file_name {
                     Ok(f) => {
-                        packet_snooper.set_file_name(&f);
-                        //TODO create file here or in the above function "packet_snooper::set_file_name(&f)"
+                        match packet_snooper.set_file_name(&f) {
+                            Ok(_) => { continue; },
+                            Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+                        }
                     },
                     Err(e) => { println!("{}", e); },
                 }
@@ -52,7 +56,7 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "start" => { packet_snooper.start(); },
+                            "start" => { packet_snooper.start().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -67,9 +71,9 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort(); },
-                            "end" => { packet_snooper.end(); },
-                            "stop" => { packet_snooper.stop(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
+                            "end" => { packet_snooper.end().unwrap(); },
+                            "stop" => { packet_snooper.stop().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -84,9 +88,9 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort(); },
-                            "end" => { packet_snooper.end(); },
-                            "resume" => { packet_snooper.resume(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
+                            "end" => { packet_snooper.end().unwrap(); },
+                            "resume" => { packet_snooper.resume().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -95,6 +99,8 @@ fn main() {
                 };
             }
         }
+
+        sleep(Duration::from_millis(100));
     }
 }
 
@@ -108,15 +114,6 @@ fn get_data_from_user() -> Result<String, Error> {
 fn wait_for_key_press() {
     let mut buffer = String::new();
     io::stdin().lock().read_line(&mut buffer).expect("Something went wrong with user input.");
-}
-
-fn retrieve_device(interface_name: &str) -> Result<Device, &'static str> {
-    for device in Device::list().unwrap() {
-        if interface_name == device.name {
-            return Ok(device);
-        }
-    }
-    Err("unable to find device with the specified interface name ")
 }
 
 fn print_interfaces() -> () {
