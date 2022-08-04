@@ -2,7 +2,6 @@ use crate::network_components::tcp_packet::TcpPacket;
 use crate::network_components::upd_packet::UdpPacket;
 use std::fmt::{Display, Formatter};
 use std::net::{Ipv4Addr};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum IpProtocolType {
@@ -84,11 +83,7 @@ impl IPv4Packet {
 
 impl Display for IPv4Packet {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Blue))).unwrap();
         write!(f, "IPv4     ").unwrap();
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
-
         write!(f, ": {} -> {}\n > [version: {}, header-length: {}B, diff-serv: {:#04x}, tot-length: {}B, identification: {:#04x}, flags: {:#04x}, frag-offset: {}, ttl: {}, header-checksum: {:#04x} ]\n",
             self.ip_addr_src,
             self.ip_addr_dst,

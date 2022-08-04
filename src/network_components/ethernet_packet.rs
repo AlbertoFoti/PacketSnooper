@@ -1,7 +1,6 @@
 use crate::network_components::ipv4_packet::IPv4Packet;
 use crate::network_components::mac_address::MacAddress;
 use std::fmt::{Display, Formatter};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EtherType {
@@ -43,10 +42,7 @@ impl EtherPacket {
 
 impl Display for EtherPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green))).unwrap();
         write!(f, "Ethernet ").unwrap();
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
         write!(f, ": {} -> {} \n", self.mac_addr_dst, self.mac_addr_src).unwrap();
 
         match self.ether_type {

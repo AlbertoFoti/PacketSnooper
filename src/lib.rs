@@ -105,6 +105,9 @@
 // TODO : check documentation correctness
 // TODO : refactor of network components struct and modules
 
+// Fixes
+// TODO : issue when ending thread. Stuck inside newtork receiver.
+
 pub mod network_components;
 pub mod utility;
 
@@ -114,7 +117,7 @@ use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::io::{Write};
 use std::sync::{Arc, Condvar, Mutex};
-use std::thread::JoinHandle;
+use std::thread::{JoinHandle, sleep};
 use std::time::Duration;
 
 #[derive(Debug, PartialEq)]
@@ -461,7 +464,9 @@ impl PacketSnooper {
         if self.state != State::Working && self.state != State::Stopped { return Err("Invalid call on end when in an illegal state"); }
 
         *self.end_thread.lock().unwrap() = true;
-        self.thread.take().map(JoinHandle::join);
+        *self.stop_thread.lock().unwrap() = false;
+        self.stop_thread_cv.notify_one();
+        self.thread.take().unwrap().join().unwrap();
         self.state = State::Ready;
         Ok(())
     }
@@ -507,7 +512,7 @@ impl PacketSnooper {
     }
 
     fn network_analysis(&self, interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) -> impl FnOnce() -> () {
-        let timeout = 50;
+        let timeout = 10;
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
                 .timeout(timeout)

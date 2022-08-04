@@ -1,5 +1,4 @@
 use std::fmt::Formatter;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum UpperLayerService {
@@ -46,8 +45,6 @@ pub fn known_port(src_port: u16, dst_port: u16) -> u16 {
 }
 
 pub fn print_upper_layer(f: &mut Formatter<'_>, upper_layer_service: UpperLayerService) -> std::fmt::Result {
-    let mut stdout = StandardStream::stdout(ColorChoice::Always);
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Magenta))).unwrap();
     match upper_layer_service {
         UpperLayerService::FTP   => { write!(f, "FTP     ") },
         UpperLayerService::SSH   => { write!(f, "SSH     ") },
@@ -61,6 +58,5 @@ pub fn print_upper_layer(f: &mut Formatter<'_>, upper_layer_service: UpperLayerS
         UpperLayerService::HTTPS => { write!(f, "HTTPS   ") },
         _ => { write!(f, "Other Protocol incapsulated in UDP segment (Unknown Protocol)") }
     }.unwrap();
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 255, 255)))).unwrap();
     write!(f, ": Protocol details unknown")
 }
