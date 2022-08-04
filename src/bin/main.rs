@@ -30,8 +30,8 @@ fn main() {
 
                 match time_interval {
                     Ok(t) => {
-                        match packet_snooper.set_time_interval(Duration::from_secs(t as u64)) {
-                            Ok(_) => (),
+                        match packet_snooper.set_time_interval(t as u64) {
+                            Ok(_) => { continue; },
                             Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                         }
                     },
@@ -44,7 +44,7 @@ fn main() {
                 match file_name {
                     Ok(f) => {
                         match packet_snooper.set_file_name(&f) {
-                            Ok(_) => (),
+                            Ok(_) => { continue; },
                             Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                         }
                     },

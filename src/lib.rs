@@ -9,7 +9,7 @@
 //! let time_interval: u64 = 60;
 //! let file_name: &str = "hello.txt";
 //!
-//! let mut packet_snooper = PacketSnooper::new(
+//! let mut packet_snooper = PacketSnooper::new().with_details(
 //!             interface_name,
 //!             time_interval,
 //!             file_name).expect("Something went wrong.");  // It's now in state State::Ready
@@ -36,20 +36,20 @@
 //!             ...
 //!             match packet_snooper.set_device(interface_name.as_str()) {
 //!                 Ok(_) => { continue; },
-//!                 Err(e) => { println ! ("{}", e);},
+//!                 Err(e) => { println!("{}", e); },
 //!            }
 //!        }
 //!        State::ConfigTimeInterval => {
 //!            ...
-//!            match packet_snooper.set_time_interval(Duration::from_secs(t as u64)) {
-//!                Ok(_) => (),
+//!            match packet_snooper.set_time_interval(t as u64) {
+//!                Ok(_) => { continue; },
 //!                Err(e) => { println ! ("{}", e); },
 //!            }
 //!        },
 //!        State::ConfigFile => {
 //!            ...
 //!            match packet_snooper.set_file_name(file_name) {
-//!                Ok(_) => (),
+//!                Ok(_) => { continue; },
 //!                Err(e) => { println!("{}", e); },
 //!            }
 //!        },
@@ -77,7 +77,7 @@
 //!                "abort" => { packet_snooper.abort(); },
 //!                "end" => { packet_snooper.end(); },
 //!                "resume" => { packet_snooper.resume(); },
-//!                "exit" => { return; }1
+//!                "exit" => { return; },
 //!                _ => { println ! ("Invalid command."); }
 //!            }
 //!        };
@@ -125,7 +125,7 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
-/// match packet_snooper.set_time_interval(Duration::from_secs(60)) {
+/// match packet_snooper.set_time_interval(60) {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
@@ -133,7 +133,15 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
-///
+/// ```
+/// ```
+/// let interface_name: &str = "eth0";
+/// let time_interval: u64 = 75;
+/// let file_name: &str = "dump.txt";
+/// let mut packet_snooper = PacketSnooper::new().with_details(
+///             interface_name,
+///             time_interval,
+///             file_name).expect("Something went wrong.");
 /// ```
 pub struct PacketSnooper {
     pub state: State,
@@ -147,6 +155,11 @@ pub struct PacketSnooper {
 }
 
 impl PacketSnooper {
+    /// PacketSnooper struct Constructor
+    /// # Examples
+    /// ```
+    /// let mut packet_snooper = PacketSnooper::new();
+    /// ```
     pub fn new() -> PacketSnooper {
         PacketSnooper {
             state: State::ConfigDevice,
@@ -158,6 +171,24 @@ impl PacketSnooper {
             end_thread: Arc::new(Mutex::new(false)),
             thread: Option::from(thread::spawn(move || {})),
         }
+    }
+
+    /// PacketSnooper struct Constructor with details (automatic configuration when building the PacketSnooper object)
+    /// # Examples
+    /// ```
+    /// let interface_name: &str = "eth0";
+    /// let time_interval: u64 = 75;
+    /// let file_name: &str = "dump.txt";
+    /// let mut packet_snooper = PacketSnooper::new().with_details(
+    ///             interface_name,
+    ///             time_interval,
+    ///             file_name).expect("Something went wrong.");
+    /// ```
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_name: &str) -> Result<PacketSnooper, &'static str> {
+        self.set_device(interface_name)?;
+        self.set_time_interval(time_interval)?;
+        self.set_file_name(file_name)?;
+        Ok(self)
     }
 
     /// Set *`network interface`* (device) inside PacketSnooper struct.
@@ -180,7 +211,7 @@ impl PacketSnooper {
     /// ```
     /// match packet_snooper.set_device(interface_name.as_str()) {
     ///     Ok(_) => (),
-    ///     Err(e) => (),
+    ///     Err(e) => ( println!("{}", e); ),
     /// }
     ///
     /// ```
@@ -208,10 +239,10 @@ impl PacketSnooper {
     /// Simplified call (without error handling)
     /// ```
     /// let time_interval: u64 = 75;
-    /// packet_snooper.set_time_interval(Duration::from_secs(time_interval)).unwrap();
+    /// packet_snooper.set_time_interval(time_interval).unwrap();
     /// ```
     /// ```
-    /// packet_snooper.set_time_interval(Duration::from_secs(75)).unwrap();
+    /// packet_snooper.set_time_interval(75).unwrap();
     /// ```
     ///
     /// # Error
@@ -221,15 +252,15 @@ impl PacketSnooper {
     /// Handling error cases:
     /// ```
     /// let time_interval: u64 = 75;
-    /// match packet_snooper.set_time_interval(Duration::from_secs(time_interval)) {
+    /// match packet_snooper.set_time_interval(time_interval) {
     ///     Ok(_) => (),
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
     ///
-    pub fn set_time_interval(&mut self, time_interval: Duration) -> Result<(), &'static str> {
+    pub fn set_time_interval(&mut self, time_interval: u64) -> Result<(), &'static str> {
         if self.state == State::ConfigTimeInterval {
-            self.time_interval = time_interval;
+            self.time_interval = Duration::from_secs(time_interval);
             self.state = State::ConfigFile;
             Ok(())
         } else {
