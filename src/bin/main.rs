@@ -11,7 +11,7 @@ fn main() {
 
     loop {
         clear_screen();
-        sleep(Duration::from_millis(50));
+        sleep(Duration::from_millis(100));
         println!("{}", packet_snooper);
 
         match packet_snooper.state {
@@ -58,7 +58,7 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "start" => { packet_snooper.start(); },
+                            "start" => { packet_snooper.start().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -73,9 +73,9 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort(); },
-                            "end" => { packet_snooper.end(); },
-                            "stop" => { packet_snooper.stop(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
+                            "end" => { packet_snooper.end().unwrap(); },
+                            "stop" => { packet_snooper.stop().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -90,9 +90,9 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort(); },
-                            "end" => { packet_snooper.end(); },
-                            "resume" => { packet_snooper.resume(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
+                            "end" => { packet_snooper.end().unwrap(); },
+                            "resume" => { packet_snooper.resume().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };

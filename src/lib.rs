@@ -345,21 +345,7 @@ impl PacketSnooper {
         let stop_thread_cv = self.stop_thread_cv.clone();
         let end_thread = self.end_thread.clone();
 
-        self.thread = Option::from(thread::spawn(move || {
-            let mut i = 0;
-            loop {
-                thread::sleep(Duration::from_secs(1));
-                if *end_thread.lock().unwrap() == true {
-                    return;
-                }
-                let mut stop_flag = *stop_thread.lock().unwrap();
-                while stop_flag == true {
-                    stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
-                }
-                println!("working...{}", i);
-                i += 1;
-            }
-        }));
+        self.thread = Option::from(thread::spawn(self.network_analysis(stop_thread, stop_thread_cv, end_thread)));
         self.state = State::Working;
         Ok(())
     }
@@ -495,6 +481,24 @@ impl PacketSnooper {
             }
         }
         Err("unable to find device with the specified interface name ")
+    }
+
+    fn network_analysis(&self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) -> impl FnOnce() -> () {
+        move || {
+            let mut i = 0;
+            loop {
+                thread::sleep(Duration::from_secs(1));
+                if *end_thread.lock().unwrap() == true {
+                    return;
+                }
+                let mut stop_flag = *stop_thread.lock().unwrap();
+                while stop_flag == true {
+                    stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
+                }
+                println!("working...{}", i);
+                i += 1;
+            }
+        }
     }
 
     pub fn test_simple_read_packets() {
