@@ -10,4 +10,4 @@ pub mod upd_packet;
 pub mod upper_layer_services;
 
 // Tests
-pub mod tests;
+mod tests;

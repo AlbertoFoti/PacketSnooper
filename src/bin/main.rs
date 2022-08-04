@@ -10,6 +10,7 @@ fn main() {
     println!("{}", packet_snooper);
 
     loop {
+        sleep(Duration::from_millis(50));
         clear_screen();
 
         match packet_snooper.state {
@@ -99,8 +100,6 @@ fn main() {
                 };
             }
         }
-
-        sleep(Duration::from_millis(100));
     }
 }
 

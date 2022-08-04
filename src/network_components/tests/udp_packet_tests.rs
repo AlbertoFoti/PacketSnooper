@@ -3,11 +3,11 @@ use crate::network_components::upd_packet::UdpPacket;
 use crate::network_components::upper_layer_services::UpperLayerService;
 
 fn check_packet(udp_packet: UdpPacket) {
-    assert_eq!(udp_packet.src_port, [131, 149]);
-    assert_eq!(udp_packet.dst_port, [1, 187]);
-    assert_eq!(udp_packet.length, [0, 41]);
-    assert_eq!(udp_packet.checksum, [100, 18]);
-    assert_eq!(udp_packet.upper_layer_service.unwrap(), UpperLayerService::HTTPS);
+    assert_eq!(udp_packet.src_port, u16::from_be_bytes([131, 149]));
+    assert_eq!(udp_packet.dst_port, u16::from_be_bytes([1, 187]));
+    assert_eq!(udp_packet.length, u16::from_be_bytes([0, 41]));
+    assert_eq!(udp_packet.checksum, u16::from_be_bytes([100, 18]));
+    assert_eq!(udp_packet.upper_layer_service, UpperLayerService::HTTPS);
 }
 
 #[test]
