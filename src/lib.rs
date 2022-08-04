@@ -124,7 +124,7 @@ use std::time::Duration;
 /// Packet Snooper custom Error type PSError.
 pub struct PSError {
     /// Message describing the error.
-    message: String,
+    pub message: String,
 }
 
 impl PSError {
