@@ -106,7 +106,9 @@
 // TODO : refactor of network components struct and modules
 
 // Fixes
-// TODO : issue when ending thread. Stuck inside newtork receiver.
+// TODO : issue when ending thread. Stuck inside network receiver.
+
+extern crate core;
 
 pub mod network_components;
 pub mod utility;
@@ -117,7 +119,7 @@ use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::io::{Write};
 use std::sync::{Arc, Condvar, Mutex};
-use std::thread::{JoinHandle, sleep};
+use std::thread::{JoinHandle};
 use std::time::Duration;
 
 #[derive(Debug, PartialEq)]
@@ -466,7 +468,7 @@ impl PacketSnooper {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_one();
-        self.thread.take().unwrap().join().unwrap();
+        //self.thread.take().map(JoinHandle::join);
         self.state = State::Ready;
         Ok(())
     }
@@ -497,7 +499,7 @@ impl PacketSnooper {
         // TODO return Err(e) when in an illegal state. Are there illegal states for abort???!
         *self.end_thread.lock().unwrap() = true;
         // TODO make sure nothing breaks here as take() is done in all states -> Test
-        self.thread.take().map(JoinHandle::join);
+        //self.thread.take().map(JoinHandle::join);
         self.state = State::ConfigDevice;
         Ok(())
     }
@@ -512,7 +514,7 @@ impl PacketSnooper {
     }
 
     fn network_analysis(&self, interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) -> impl FnOnce() -> () {
-        let timeout = 10;
+        let timeout = 25;
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
                 .timeout(timeout)
@@ -532,7 +534,9 @@ impl PacketSnooper {
                             .open().unwrap();
                 }
                 if let Ok(packet) = cap.next() {
-                    PacketSnooper::decode_packet(packet);
+                    if *end_thread.lock().unwrap() == false && *stop_thread.lock().unwrap() == false {
+                        PacketSnooper::decode_packet(packet);
+                    }
                 }
             }
         }
@@ -560,5 +564,13 @@ impl Display for PacketSnooper {
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
         write!(f, "\nTime interval before report generation : {:?}", self.time_interval).unwrap();
         write!(f, "\nFile name Target for report generation: {:?}", self.file_name)
+    }
+}
+
+impl Drop for PacketSnooper {
+    fn drop(&mut self) {
+        if self.thread.is_some() {
+            self.thread.take().unwrap().join().unwrap();
+        }
     }
 }
