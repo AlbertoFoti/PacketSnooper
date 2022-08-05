@@ -108,8 +108,12 @@
 // TODO : tests for IPv6 packet
 // TODO : tests for TCP
 
+extern crate core;
+
 pub mod network_components;
 pub mod utility;
+
+#[cfg(test)]
 mod tests;
 
 use std::fmt::{Display, Formatter};
@@ -125,7 +129,7 @@ use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Packet Snooper custom Error type PSError.
 pub struct PSError {
     /// Message describing the error.
@@ -226,8 +230,8 @@ impl PacketSnooper {
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
-            network_capture_thread: Option::from(thread::spawn(move || {})),
-            consumer_thread: Option::from(thread::spawn(|| {})),
+            network_capture_thread: None,
+            consumer_thread: None,
         }
     }
 
