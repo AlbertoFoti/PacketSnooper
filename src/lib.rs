@@ -90,14 +90,13 @@
 //! ```
 
 // Easy tasks
-// TODO : basic IPv6 implementation
 // TODO : finish work on TCP
 // TODO : check if everything works on windows
 
 // Major tasks
 // TODO : timer for report generation implemented
 // TODO : file report generation
-// TODO : in-depth testing
+// TODO : in-depth concurrency testing
 
 // Advanced (optional)
 // TODO : filters
@@ -108,6 +107,8 @@
 
 // Future stuff to do
 // TODO : complete documentation and check for correctness
+// TODO : tests for IPv6 packet
+// TODO : tests for TCP
 
 pub mod network_components;
 pub mod utility;
