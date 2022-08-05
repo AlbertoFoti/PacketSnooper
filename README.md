@@ -3,8 +3,8 @@ A Rust cross-platform cli packet analyzer
 
 ## TCP/IP Architecture Support
 ### Layer 2
-    full-support: Ethernet
-    identification: ()
+    full-support: EthernetII
+    identification: Ethernet802.3
     future support: ()
 ### Layer 3 (Ethernet field "EtherType". IEEE 802.3)
     full-support: IPv4, (IPv6), IPv6HopByHop
