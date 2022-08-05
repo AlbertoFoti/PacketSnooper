@@ -114,7 +114,6 @@ pub mod network_components;
 pub mod utility;
 
 use std::fmt::{Display, Formatter};
-use crate::network_components::ethernet_packet::EthernetPacket;
 use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::error::Error;
@@ -123,6 +122,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
+use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -404,7 +404,6 @@ impl PacketSnooper {
         thread::spawn(move|| {
             while let Ok(packet) = rx.recv() {
                 println!("---------------");
-                //let packet : EthernetPacket = serde_json::from_str(&packet).unwrap();
                 println!("{}", EthernetPacket::from_json(&packet).unwrap());
                 io::stdout().flush().unwrap();
             }

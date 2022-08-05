@@ -1,5 +1,6 @@
-use crate::network_components::ethernet_packet::{EthernetPacket, EtherType};
-use crate::network_components::mac_address::MacAddress;
+use crate::EthernetPacket;
+use crate::network_components::layer_2::ethernet_packet::EtherType;
+use crate::network_components::layer_2::mac_address::MacAddress;
 
 #[test]
 fn new_ether_packet() {

@@ -1,8 +1,8 @@
-use crate::network_components::ipv4_packet::IPv4Packet;
-use crate::network_components::mac_address::MacAddress;
 use std::fmt::{Display, Formatter};
-use serde::{Deserialize, Serialize};
-use crate::network_components::ipv6_packet::IPv6Packet;
+use crate::network_components::layer_2::mac_address::MacAddress;
+use crate::network_components::layer_3::ipv4_packet::IPv4Packet;
+use crate::network_components::layer_3::ipv6_packet::IPv6Packet;
+use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EtherType {

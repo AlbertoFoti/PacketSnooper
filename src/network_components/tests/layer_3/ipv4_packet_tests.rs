@@ -1,5 +1,5 @@
 use std::net::Ipv4Addr;
-use crate::network_components::ipv4_packet::{Ipv4ProtocolType, IPv4Packet};
+use crate::network_components::layer_3::ipv4_packet::{IPv4Packet, Ipv4ProtocolType};
 use crate::network_components::tests::{IPV4_DATA_IN_U8, IPV4_DATA_IN_U8_WITH_OPTIONS};
 
 #[test]

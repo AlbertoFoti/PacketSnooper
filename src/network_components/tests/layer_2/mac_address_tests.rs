@@ -1,4 +1,4 @@
-use crate::network_components::mac_address::MacAddress;
+use crate::network_components::layer_2::mac_address::MacAddress;
 use crate::network_components::tests::MAC_IN_U8;
 
 #[test]
