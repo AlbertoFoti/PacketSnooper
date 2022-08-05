@@ -19,7 +19,7 @@ fn new_ipv4_packet() {
     assert_eq!(ipv4_packet.header_checksum, u16::from_be_bytes([128, 107]));
     assert_eq!(ipv4_packet.ip_addr_src, Ipv4Addr::new(192, 168, 1, 90));
     assert_eq!(ipv4_packet.ip_addr_dst, Ipv4Addr::new(142, 250, 184, 42));
-    assert_eq!(ipv4_packet.options, Vec::new());
+    assert_eq!(ipv4_packet.options, Vec::<u8>::new());
     assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8[20..]));
 }
 

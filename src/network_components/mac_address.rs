@@ -1,7 +1,8 @@
 use std::fmt::{Display, Formatter, Write};
 use crate::utility;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct MacAddress {
     pub mac_raw: [u8; 6],
 }

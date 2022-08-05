@@ -90,7 +90,6 @@
 //! ```
 
 // Easy tasks
-// TODO : serialize and deserialize traffic on channel
 // TODO : basic IPv6 implementation
 // TODO : finish work on TCP
 // TODO : check if everything works on windows
@@ -114,13 +113,13 @@ pub mod network_components;
 pub mod utility;
 
 use std::fmt::{Display, Formatter};
-use crate::network_components::ethernet_packet::EtherPacket;
+use crate::network_components::ethernet_packet::EthernetPacket;
 use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::error::Error;
 use std::io::{Write};
 use std::sync::{Arc, Condvar, Mutex};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{channel, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 
@@ -397,14 +396,15 @@ impl PacketSnooper {
         let stop_thread_cv = self.stop_thread_cv.clone();
         let end_thread = self.end_thread.clone();
 
-        let ( tx, rx ) : (Sender<EtherPacket>, Receiver<EtherPacket>) = channel();
+        let ( tx, rx ) = channel();
 
         self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
 
         thread::spawn(move|| {
             while let Ok(packet) = rx.recv() {
                 println!("---------------");
-                println!("{}", packet);
+                //let packet : EthernetPacket = serde_json::from_str(&packet).unwrap();
+                println!("{}", EthernetPacket::from_json(&packet).unwrap());
                 io::stdout().flush().unwrap();
             }
         });
@@ -553,7 +553,7 @@ impl PacketSnooper {
         Err(PSError::new("unable to find device with the specified interface name "))
     }
 
-    fn network_analysis(interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>, tx: Sender<EtherPacket>) -> impl FnOnce() -> () {
+    fn network_analysis(interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>, tx: Sender<String>) -> impl FnOnce() -> () {
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
                 .timeout(CAPTURE_BUFFER_TIMEOUT_MS)
@@ -577,17 +577,16 @@ impl PacketSnooper {
                 }
                 if let Ok(packet) = cap.next() {
                     if *end_thread.lock().unwrap() == false && *stop_thread.lock().unwrap() == false {
-                            let res = PacketSnooper::decode_packet(packet);
-                            tx.send(res).unwrap();
+                            tx.send(PacketSnooper::decode_packet(packet).to_json()).unwrap();
                     }
                 }
             }
         }
     }
 
-    fn decode_packet(packet: Packet) -> EtherPacket {
+    fn decode_packet(packet: Packet) -> EthernetPacket {
         let data = packet.data;
-        EtherPacket::new(data)
+        EthernetPacket::new(data)
     }
 }
 
