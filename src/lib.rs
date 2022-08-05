@@ -90,13 +90,15 @@
 //! ```
 
 // Easy tasks
-// TODO : in-depth testing
 // TODO : serialize and deserialize traffic on channel
 // TODO : basic IPv6 implementation
+// TODO : finish work on TCP
+// TODO : check if everything works on windows
 
 // Major tasks
 // TODO : timer for report generation implemented
 // TODO : file report generation
+// TODO : in-depth testing
 
 // Advanced (optional)
 // TODO : filters
