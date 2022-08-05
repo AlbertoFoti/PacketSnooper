@@ -33,8 +33,6 @@
 //! let mut packet_snooper = PacketSnooper::new();
 //!
 //! loop() {
-//!     sleep(Duration::from_millis(50));
-//!
 //!     match packet_snooper.state {
 //!         State::ConfigDevice => {
 //!             ...
@@ -90,15 +88,13 @@
 //! ```
 
 // Easy tasks
-// TODO : serialize and deserialize traffic on channel
-// TODO : basic IPv6 implementation
 // TODO : finish work on TCP
 // TODO : check if everything works on windows
 
 // Major tasks
 // TODO : timer for report generation implemented
 // TODO : file report generation
-// TODO : in-depth testing
+// TODO : in-depth concurrency testing
 
 // Advanced (optional)
 // TODO : filters
@@ -109,12 +105,14 @@
 
 // Future stuff to do
 // TODO : complete documentation and check for correctness
+// TODO : tests for IPv6 packet
+// TODO : tests for TCP
 
 pub mod network_components;
 pub mod utility;
+mod tests;
 
 use std::fmt::{Display, Formatter};
-use crate::network_components::ethernet_packet::EtherPacket;
 use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::error::Error;
@@ -123,6 +121,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
+use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -397,17 +396,10 @@ impl PacketSnooper {
         let stop_thread_cv = self.stop_thread_cv.clone();
         let end_thread = self.end_thread.clone();
 
-        let ( tx, rx ) : (Sender<EtherPacket>, Receiver<EtherPacket>) = channel();
+        let ( tx, rx ) = channel();
 
         self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
-
-        thread::spawn(move|| {
-            while let Ok(packet) = rx.recv() {
-                println!("---------------");
-                println!("{}", packet);
-                io::stdout().flush().unwrap();
-            }
-        });
+        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(Box::new(rx))));
 
         self.state = State::Working;
         Ok(())
@@ -440,6 +432,7 @@ impl PacketSnooper {
 
         *self.stop_thread.lock().unwrap() = true;
         self.stop_thread_cv.notify_one();
+
         self.state = State::Stopped;
         Ok(())
     }
@@ -471,6 +464,7 @@ impl PacketSnooper {
 
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
+
         self.state = State::Working;
         Ok(())
     }
@@ -503,6 +497,7 @@ impl PacketSnooper {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
+
         self.network_capture_thread.take().map(JoinHandle::join);
         self.consumer_thread.take().map(JoinHandle::join);
 
@@ -512,7 +507,7 @@ impl PacketSnooper {
 
     /// *`abort`* network traffic analysis and configuration inside PacketSnooper framework.
     ///
-    /// Transitions from ??? state to ConfigDevice state, halting and scrapping progresses, including configuration info.
+    /// Transitions from Working/Stopped state to ConfigDevice state, halting and scrapping progresses, including configuration info.
     ///
     /// # Examples
     ///
@@ -533,10 +528,12 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn abort(&mut self) -> Result<()> {
-        // TODO return Err(e) when in an illegal state. Are there illegal states for abort???!
+        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on abort when in an illegal state"))}
+
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
+
         self.network_capture_thread.take().map(JoinHandle::join);
         self.consumer_thread.take().map(JoinHandle::join);
 
@@ -553,7 +550,7 @@ impl PacketSnooper {
         Err(PSError::new("unable to find device with the specified interface name "))
     }
 
-    fn network_analysis(interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>, tx: Sender<EtherPacket>) -> impl FnOnce() -> () {
+    fn network_analysis(interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>, tx: Sender<String>) -> impl FnOnce() -> () {
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
                 .timeout(CAPTURE_BUFFER_TIMEOUT_MS)
@@ -577,17 +574,26 @@ impl PacketSnooper {
                 }
                 if let Ok(packet) = cap.next() {
                     if *end_thread.lock().unwrap() == false && *stop_thread.lock().unwrap() == false {
-                            let res = PacketSnooper::decode_packet(packet);
-                            tx.send(res).unwrap();
+                            tx.send(PacketSnooper::decode_packet(packet).to_json()).unwrap();
                     }
                 }
             }
         }
     }
 
-    fn decode_packet(packet: Packet) -> EtherPacket {
+    fn consume_packets(rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+        move || {
+            while let Ok(packet) = rx.recv() {
+                println!("---------------");
+                println!("{}", EthernetPacket::from_json(&packet).unwrap());
+                io::stdout().flush().unwrap();
+            }
+        }
+    }
+
+    fn decode_packet(packet: Packet) -> EthernetPacket {
         let data = packet.data;
-        EtherPacket::new(data)
+        EthernetPacket::new(data)
     }
 }
 

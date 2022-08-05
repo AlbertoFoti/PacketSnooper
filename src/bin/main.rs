@@ -1,7 +1,5 @@
 use std::io;
 use std::io::{BufRead, Write};
-use std::thread::sleep;
-use std::time::Duration;
 use pcap::{Device, Error};
 use packet_snooper::{PacketSnooper, State};
 
@@ -10,7 +8,6 @@ fn main() {
     println!("{}", packet_snooper);
 
     loop {
-        sleep(Duration::from_millis(50));
         clear_screen();
 
         match packet_snooper.state {

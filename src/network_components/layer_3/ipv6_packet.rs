@@ -1,7 +1,7 @@
-use crate::network_components::tcp_packet::TcpPacket;
-use crate::network_components::upd_packet::UdpPacket;
 use std::fmt::{Display, Formatter};
 use std::net::{Ipv6Addr};
+use crate::network_components::layer_4::tcp_packet::TcpPacket;
+use crate::network_components::layer_4::upd_packet::UdpPacket;
 use crate::utility;
 
 #[derive(Debug, Copy, Clone, PartialEq)]

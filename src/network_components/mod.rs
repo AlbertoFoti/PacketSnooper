@@ -1,14 +1,10 @@
-pub mod ethernet_packet;
-pub mod mac_address;
 
-pub mod ipv4_packet;
-//pub mod ipv4address;
-pub mod ipv6_packet;
+pub mod layer_2;
 
-pub mod tcp_packet;
-pub mod upd_packet;
+pub mod layer_3;
 
-pub mod upper_layer_services;
+pub mod layer_4;
 
-// Tests
+pub mod services_upper_layers;
+
 mod tests;

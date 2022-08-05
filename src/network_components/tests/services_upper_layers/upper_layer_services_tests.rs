@@ -1,4 +1,4 @@
-use crate::network_components::upper_layer_services::{known_port, UpperLayerService};
+use crate::network_components::services_upper_layers::upper_layer_services::{known_port, UpperLayerService};
 
 #[test]
 pub fn from_known_port_to_service_test() {

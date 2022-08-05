@@ -1,5 +1,4 @@
-use crate::network_components::ipv4address::IPv4Address;
-use crate::network_components::tests::IPV4_IN_U8;
+use crate::network_components::layer_3::ipv4address::IPv4Address;
 
 #[test]
 fn new_ipv4_address() {
