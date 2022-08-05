@@ -3,6 +3,7 @@ pub mod mac_address;
 
 pub mod ipv4_packet;
 //pub mod ipv4address;
+pub mod ipv6_packet;
 
 pub mod tcp_packet;
 pub mod upd_packet;

@@ -563,11 +563,17 @@ impl PacketSnooper {
         move || {
             loop {
                 if *end_thread.lock().unwrap() == true {
+                    drop(cap);
                     break;
                 }
                 let mut stop_flag = *stop_thread.lock().unwrap();
                 while stop_flag == true {
                     stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
+                    cap = Capture::from_device(interface_name.as_str()).unwrap()
+                            .promisc(true)
+                            .timeout(CAPTURE_BUFFER_TIMEOUT_MS)
+                            .open().unwrap()
+                            .setnonblock().unwrap();
                 }
                 if let Ok(packet) = cap.next() {
                     if *end_thread.lock().unwrap() == false && *stop_thread.lock().unwrap() == false {

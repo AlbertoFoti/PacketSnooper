@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::net::{Ipv4Addr};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum IpProtocolType {
+pub enum Ipv4ProtocolType {
     ICMPv4,
     IGMP,
     TCP,
@@ -20,7 +20,7 @@ pub struct IPv4Packet {
     pub flags: u8,
     pub fragmentation_offset: u8,
     pub ttl: u8,
-    pub protocol_type: Option<IpProtocolType>,
+    pub protocol_type: Option<Ipv4ProtocolType>,
     pub header_checksum: u16,
     pub ip_addr_src: Ipv4Addr,
     pub ip_addr_dst: Ipv4Addr,
@@ -65,12 +65,12 @@ impl IPv4Packet {
         Vec::from(&ipv4_data_in_u8[20..header_length as usize])
     }
 
-    pub fn to_protocol_type(protocol_type_in_u8: u8) -> Option<IpProtocolType> {
+    pub fn to_protocol_type(protocol_type_in_u8: u8) -> Option<Ipv4ProtocolType> {
         match protocol_type_in_u8 {
-            1 => return Some(IpProtocolType::ICMPv4),
-            2 => return Some(IpProtocolType::IGMP),
-            6 => return Some(IpProtocolType::TCP),
-            17 => return Some(IpProtocolType::UDP),
+            1 => return Some(Ipv4ProtocolType::ICMPv4),
+            2 => return Some(Ipv4ProtocolType::IGMP),
+            6 => return Some(Ipv4ProtocolType::TCP),
+            17 => return Some(Ipv4ProtocolType::UDP),
             x => {
                 return {
                     println!("no info on this protocol: {:?}", x);
@@ -99,16 +99,16 @@ impl Display for IPv4Packet {
         ).unwrap();
 
         match self.protocol_type {
-            Some(IpProtocolType::ICMPv4) => {
+            Some(Ipv4ProtocolType::ICMPv4) => {
                 write!(f, "ICMP     : Unknown Details")
             },
-            Some(IpProtocolType::IGMP) => {
+            Some(Ipv4ProtocolType::IGMP) => {
                 write!(f, "IGMP     : Unknown Details")
             },
-            Some(IpProtocolType::UDP) => {
+            Some(Ipv4ProtocolType::UDP) => {
                 write!(f, "{}", UdpPacket::new(self.payload.as_slice()))
             },
-            Some(IpProtocolType::TCP) => {
+            Some(Ipv4ProtocolType::TCP) => {
                 write!(f, "{}", TcpPacket::new(self.payload.as_slice()))
             },
             _ => {
