@@ -1,6 +1,7 @@
 use crate::network_components::ipv4_packet::IPv4Packet;
 use crate::network_components::mac_address::MacAddress;
 use std::fmt::{Display, Formatter};
+use crate::network_components::ipv6_packet::IPv6Packet;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EtherType {
@@ -40,6 +41,8 @@ impl EtherPacket {
     }
 }
 
+unsafe impl Send for EtherPacket {}
+
 impl Display for EtherPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Ethernet ").unwrap();
@@ -47,7 +50,7 @@ impl Display for EtherPacket {
 
         match self.ether_type {
             Some(EtherType::IPV4) => { write!(f, "{}", IPv4Packet::new(self.payload.as_slice())) },
-            Some(EtherType::IPV6) => { write!(f, "IPv6     : Unknown Details") },
+            Some(EtherType::IPV6) => { write!(f, "{}", IPv6Packet::new(self.payload.as_slice())) },
             Some(EtherType::ARP) => { write!(f, "ARP      : Unknown Details") },
             _ => { write!(f, "Other Protocol incapsulated in Ethernet frame (Unknown Protocol)") }
         }

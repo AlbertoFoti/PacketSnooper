@@ -56,7 +56,7 @@ pub fn print_upper_layer(f: &mut Formatter<'_>, upper_layer_service: UpperLayerS
         UpperLayerService::SNMP  => { write!(f, "SNMP    ") },
         UpperLayerService::BGP   => { write!(f, "BGP     ") },
         UpperLayerService::HTTPS => { write!(f, "HTTPS   ") },
-        _ => { write!(f, "Other Protocol incapsulated in UDP segment (Unknown Protocol)") }
+        _ => { write!(f, "Other Protocol incapsulated in TCP/UDP segment (Unknown Protocol)") }
     }.unwrap();
     write!(f, ": Protocol details unknown")
 }

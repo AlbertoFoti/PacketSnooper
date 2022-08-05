@@ -7,13 +7,13 @@ A Rust cross-platform cli packet analyzer
     identification: ()
     future support: ()
 ### Layer 3 (Ethernet field "EtherType". IEEE 802.3)
-    full-support: IPv4, 
-    identification: IPv6, ARP
+    full-support: IPv4, (IPv6), IPv6HopByHop
+    identification: ARP
     future support: ()
 ### Layer 4 ("Protocol Type" field of L3 protocols)
     full-support: UDP, (TCP)
-    identification: (). Others: IGMP, ICMPv4
-    future support: ICMPv6
+    identification: (). Others: IGMP, ICMPv4, ICMPv6
+    future support: ()
 ### Upper Layers
     full-support: ()
     identification: FTP=20, SSH=22, SMPT=23, DNS=53, HTTP=80, POP3=110
