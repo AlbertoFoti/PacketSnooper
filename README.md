@@ -30,6 +30,11 @@ A Rust cross-platform cli packet analyzer
 - Main programming Language: Rust
 - Version Control, Team Work: Git, GitHub
 
+## Libraries (rust crates) used
+- pcap
+- serde
+- serde_json
+
 ## Authors
 - Alberto Foti
 - Samuele Giannetto
