@@ -40,6 +40,8 @@ impl EtherPacket {
     }
 }
 
+unsafe impl Send for EtherPacket {}
+
 impl Display for EtherPacket {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Ethernet ").unwrap();
