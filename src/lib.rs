@@ -116,9 +116,12 @@ use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::error::Error;
 use std::io::{Write};
+use std::slice::Join;
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::{JoinHandle};
 use std::time::Duration;
+
+const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
 #[derive(Debug)]
 /// Packet Snooper custom Error type PSError.
@@ -202,7 +205,8 @@ pub struct PacketSnooper {
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
     end_thread: Arc<Mutex<bool>>,
-    thread: Option<JoinHandle<()>>,
+    network_capture_thread: Option<JoinHandle<()>>,
+    consumer_thread: Option<JoinHandle<()>>
 }
 
 impl PacketSnooper {
@@ -220,7 +224,7 @@ impl PacketSnooper {
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
-            thread: Option::from(thread::spawn(move || {})),
+            network_capture_thread: Option::from(thread::spawn(move || {})),
         }
     }
 
@@ -389,7 +393,7 @@ impl PacketSnooper {
         let stop_thread_cv = self.stop_thread_cv.clone();
         let end_thread = self.end_thread.clone();
 
-        self.thread = Option::from(thread::spawn(self.network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread)));
+        self.network_capture_thread = Option::from(thread::spawn(self.network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread)));
         self.state = State::Working;
         Ok(())
     }
@@ -484,7 +488,7 @@ impl PacketSnooper {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_one();
-        //self.thread.take().map(JoinHandle::join);
+        self.network_capture_thread.take().map(JoinHandle::join);
         self.state = State::Ready;
         Ok(())
     }
@@ -515,7 +519,7 @@ impl PacketSnooper {
         // TODO return Err(e) when in an illegal state. Are there illegal states for abort???!
         *self.end_thread.lock().unwrap() = true;
         // TODO make sure nothing breaks here as take() is done in all states -> Test
-        //self.thread.take().map(JoinHandle::join);
+        self.network_capture_thread.take().map(JoinHandle::join);
         self.state = State::ConfigDevice;
         Ok(())
     }
@@ -530,24 +534,27 @@ impl PacketSnooper {
     }
 
     fn network_analysis(&self, interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) -> impl FnOnce() -> () {
-        let timeout = 25;
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
-                .timeout(timeout)
-                .open().unwrap();
+                .timeout(CAPTURE_BUFFER_TIMEOUT_MS)
+                .open().unwrap()
+                .setnonblock().unwrap();
 
         move || {
             loop {
                 if *end_thread.lock().unwrap() == true {
+                    drop(cap);
                     break;
                 }
                 let mut stop_flag = *stop_thread.lock().unwrap();
                 while stop_flag == true {
                     stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
+                    drop(cap);
                     cap = Capture::from_device(Device::from(interface_name.as_str())).unwrap()
                             .promisc(true)
-                            .timeout(timeout)
-                            .open().unwrap();
+                            .timeout(CAPTURE_BUFFER_TIMEOUT_MS)
+                            .open().unwrap()
+                            .setnonblock().unwrap();
                 }
                 if let Ok(packet) = cap.next() {
                     if *end_thread.lock().unwrap() == false && *stop_thread.lock().unwrap() == false {
@@ -585,8 +592,6 @@ impl Display for PacketSnooper {
 
 impl Drop for PacketSnooper {
     fn drop(&mut self) {
-        if self.thread.is_some() {
-            self.thread.take().unwrap().join().unwrap();
-        }
+
     }
 }
