@@ -23,7 +23,7 @@
 //! packet_snooper.stop().unwrap();
 //! packet_snooper.resume().unwrap();
 //! packet_snooper.end().unwrap();
-//! packet_snooper.abort().unwrap();
+//! packet_snooper.abort();
 //! ```
 //!
 //! # Suggested Application Structure to use packet_snooper framework
@@ -58,7 +58,8 @@
 //!        State::Ready => {
 //!            ...
 //!            match cmd {
-//!                "start" => { packet_snooper.start(); },
+//!                "start" => { packet_snooper.start().unwrap(); },
+//!                "abort" => { packet_snooper.abort(); },
 //!                "exit" => { return; }
 //!                _ => { println ! ("Invalid command"); }
 //!            };
@@ -67,8 +68,8 @@
 //!            ...
 //!            match cmd {
 //!                "abort" => { packet_snooper.abort(); },
-//!                "end" => { packet_snooper.end(); },
-//!                "stop" => { packet_snooper.stop(); },
+//!                "end" => { packet_snooper.end().unwrap(); },
+//!                "stop" => { packet_snooper.stop().unwrap(); },
 //!                "exit" => { return; }
 //!                _ => { println ! ("Invalid command"); },
 //!            }
@@ -77,8 +78,8 @@
 //!            ...
 //!            match cmd {
 //!                "abort" => { packet_snooper.abort(); },
-//!                "end" => { packet_snooper.end(); },
-//!                "resume" => { packet_snooper.resume(); },
+//!                "end" => { packet_snooper.end().unwrap(); },
+//!                "resume" => { packet_snooper.resume().unwrap(); },
 //!                "exit" => { return; },
 //!                _ => { println ! ("Invalid command."); }
 //!            }
@@ -511,29 +512,14 @@ impl PacketSnooper {
 
     /// *`abort`* network traffic analysis and configuration inside PacketSnooper framework.
     ///
-    /// Transitions from Working/Stopped state to ConfigDevice state, halting and scrapping progresses, including configuration info.
+    /// Transitions from every state to ConfigDevice state, halting and scrapping progresses, including configuration info.
     ///
     /// # Examples
     ///
-    /// Simplified call (without error handling)
     /// ```
-    /// packet_snooper.abort().unwrap();
+    /// packet_snooper.abort();
     /// ```
-    ///
-    /// # Error
-    ///
-    /// - `Invalid call on abort when in an illegal state`
-    ///
-    /// Handling error cases:
-    /// ```
-    /// match packet_snooper.abort() {
-    ///     Ok(_) => (),
-    ///     Err(e) => { println!("{}", e); },
-    /// }
-    /// ```
-    pub fn abort(&mut self) -> Result<()> {
-        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on abort when in an illegal state."))}
-
+    pub fn abort(&mut self) {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
@@ -542,7 +528,6 @@ impl PacketSnooper {
         self.consumer_thread.take().map(JoinHandle::join);
 
         self.state = State::ConfigDevice;
-        Ok(())
     }
 
     fn retrieve_device(interface_name: &str) -> Result<Device> {
