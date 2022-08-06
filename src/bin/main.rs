@@ -55,6 +55,7 @@ fn main() {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
                             "start" => { packet_snooper.start().unwrap(); },
+                            "abort" => { packet_snooper.abort(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -69,7 +70,7 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort().unwrap(); },
+                            "abort" => { packet_snooper.abort(); },
                             "end" => { packet_snooper.end().unwrap(); },
                             "stop" => { packet_snooper.stop().unwrap(); },
                             "exit" => { return; }
@@ -86,7 +87,7 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort().unwrap(); },
+                            "abort" => { packet_snooper.abort(); },
                             "end" => { packet_snooper.end().unwrap(); },
                             "resume" => { packet_snooper.resume().unwrap(); },
                             "exit" => { return; }
@@ -166,6 +167,7 @@ fn print_ready_menu() {
     print_main_menu();
     println!("Packet Snooper is ready");
     println!("- start");
+    println!("- abort");
     println!("- exit");
     println!("------------------------");
     println!("Type command :");

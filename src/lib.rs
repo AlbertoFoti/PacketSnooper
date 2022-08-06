@@ -23,7 +23,7 @@
 //! packet_snooper.stop().unwrap();
 //! packet_snooper.resume().unwrap();
 //! packet_snooper.end().unwrap();
-//! packet_snooper.abort().unwrap();
+//! packet_snooper.abort();
 //! ```
 //!
 //! # Suggested Application Structure to use packet_snooper framework
@@ -58,7 +58,8 @@
 //!        State::Ready => {
 //!            ...
 //!            match cmd {
-//!                "start" => { packet_snooper.start(); },
+//!                "start" => { packet_snooper.start().unwrap(); },
+//!                "abort" => { packet_snooper.abort(); },
 //!                "exit" => { return; }
 //!                _ => { println ! ("Invalid command"); }
 //!            };
@@ -67,8 +68,8 @@
 //!            ...
 //!            match cmd {
 //!                "abort" => { packet_snooper.abort(); },
-//!                "end" => { packet_snooper.end(); },
-//!                "stop" => { packet_snooper.stop(); },
+//!                "end" => { packet_snooper.end().unwrap(); },
+//!                "stop" => { packet_snooper.stop().unwrap(); },
 //!                "exit" => { return; }
 //!                _ => { println ! ("Invalid command"); },
 //!            }
@@ -77,8 +78,8 @@
 //!            ...
 //!            match cmd {
 //!                "abort" => { packet_snooper.abort(); },
-//!                "end" => { packet_snooper.end(); },
-//!                "resume" => { packet_snooper.resume(); },
+//!                "end" => { packet_snooper.end().unwrap(); },
+//!                "resume" => { packet_snooper.resume().unwrap(); },
 //!                "exit" => { return; },
 //!                _ => { println ! ("Invalid command."); }
 //!            }
@@ -108,8 +109,12 @@
 // TODO : tests for IPv6 packet
 // TODO : tests for TCP
 
+extern crate core;
+
 pub mod network_components;
 pub mod utility;
+
+#[cfg(test)]
 mod tests;
 
 use std::fmt::{Display, Formatter};
@@ -125,7 +130,7 @@ use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Packet Snooper custom Error type PSError.
 pub struct PSError {
     /// Message describing the error.
@@ -226,8 +231,8 @@ impl PacketSnooper {
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
-            network_capture_thread: Option::from(thread::spawn(move || {})),
-            consumer_thread: Option::from(thread::spawn(|| {})),
+            network_capture_thread: None,
+            consumer_thread: None,
         }
     }
 
@@ -386,7 +391,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn start(&mut self) -> Result<()> {
-        if self.state != State::Ready { return Err(PSError::new("Invalid call on start when in an illegal state")); }
+        if self.state != State::Ready { return Err(PSError::new("Invalid call on start when in an illegal state.")); }
 
         let interface_name = self.current_interface.clone();
 
@@ -428,7 +433,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn stop(&mut self) -> Result<()> {
-        if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state")); }
+        if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state.")); }
 
         *self.stop_thread.lock().unwrap() = true;
         self.stop_thread_cv.notify_one();
@@ -460,7 +465,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn resume(&mut self) -> Result<()> {
-        if self.state != State::Stopped { return Err(PSError::new("Invalid call on resume when in an illegal state")); }
+        if self.state != State::Stopped { return Err(PSError::new("Invalid call on resume when in an illegal state.")); }
 
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
@@ -492,7 +497,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn end(&mut self) -> Result<()> {
-        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on end when in an illegal state")); }
+        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on end when in an illegal state.")); }
 
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
@@ -507,29 +512,14 @@ impl PacketSnooper {
 
     /// *`abort`* network traffic analysis and configuration inside PacketSnooper framework.
     ///
-    /// Transitions from Working/Stopped state to ConfigDevice state, halting and scrapping progresses, including configuration info.
+    /// Transitions from every state to ConfigDevice state, halting and scrapping progresses, including configuration info.
     ///
     /// # Examples
     ///
-    /// Simplified call (without error handling)
     /// ```
-    /// packet_snooper.abort().unwrap();
+    /// packet_snooper.abort();
     /// ```
-    ///
-    /// # Error
-    ///
-    /// - `Invalid call on abort when in an illegal state`
-    ///
-    /// Handling error cases:
-    /// ```
-    /// match packet_snooper.abort() {
-    ///     Ok(_) => (),
-    ///     Err(e) => { println!("{}", e); },
-    /// }
-    /// ```
-    pub fn abort(&mut self) -> Result<()> {
-        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on abort when in an illegal state"))}
-
+    pub fn abort(&mut self) {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
@@ -538,7 +528,6 @@ impl PacketSnooper {
         self.consumer_thread.take().map(JoinHandle::join);
 
         self.state = State::ConfigDevice;
-        Ok(())
     }
 
     fn retrieve_device(interface_name: &str) -> Result<Device> {
