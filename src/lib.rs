@@ -390,7 +390,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn start(&mut self) -> Result<()> {
-        if self.state != State::Ready { return Err(PSError::new("Invalid call on start when in an illegal state")); }
+        if self.state != State::Ready { return Err(PSError::new("Invalid call on start when in an illegal state.")); }
 
         let interface_name = self.current_interface.clone();
 
@@ -432,7 +432,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn stop(&mut self) -> Result<()> {
-        if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state")); }
+        if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state.")); }
 
         *self.stop_thread.lock().unwrap() = true;
         self.stop_thread_cv.notify_one();
@@ -464,7 +464,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn resume(&mut self) -> Result<()> {
-        if self.state != State::Stopped { return Err(PSError::new("Invalid call on resume when in an illegal state")); }
+        if self.state != State::Stopped { return Err(PSError::new("Invalid call on resume when in an illegal state.")); }
 
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
@@ -496,7 +496,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn end(&mut self) -> Result<()> {
-        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on end when in an illegal state")); }
+        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on end when in an illegal state.")); }
 
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
@@ -532,7 +532,7 @@ impl PacketSnooper {
     /// }
     /// ```
     pub fn abort(&mut self) -> Result<()> {
-        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on abort when in an illegal state"))}
+        if self.state != State::Working && self.state != State::Stopped { return Err(PSError::new("Invalid call on abort when in an illegal state."))}
 
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
