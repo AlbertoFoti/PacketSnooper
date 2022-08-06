@@ -19,6 +19,6 @@ jobs:
     - name: Config
       run: sudo apt install libpcap-dev
     - name: Build
-      run: cargo build --verbose
+      run: sudo cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: sudo cargo test --verbose
