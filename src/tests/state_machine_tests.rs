@@ -182,7 +182,6 @@ pub fn packet_snooper_abort_normal_test() {
 
 #[test]
 pub fn packet_snooper_abort_in_invalid_state_test() {
-    /*
     let error_str = "Invalid call on abort when in an illegal state.";
     let mut ps = PacketSnooper::new();
 
@@ -201,6 +200,4 @@ pub fn packet_snooper_abort_in_invalid_state_test() {
         let res = ps.abort();
         assert!(res.is_ok());
     }
-     */
-    assert_eq!(1, 1);
 }
