@@ -117,16 +117,11 @@ fn print_interfaces() -> () {
     println!("List of available interfaces: ");
     for device in Device::list().unwrap() {
         print!("[{:?} ] : ", device.name);
-        if device.addresses.is_empty() {
-            println!();
-            break
-        };
         for address in device.addresses {
             println!(
                 "[{:?} / {:?}]",
                 address.addr, address.netmask
             );
-            break;
         }
     }
 }
@@ -205,6 +200,6 @@ fn clear_screen() {
     if cfg!(unix) {
         std::process::Command::new("clear").status().unwrap();
     } else if cfg!(windows) {
-        std::process::Command::new("cls").status().unwrap();
+        std::process::Command::new("cmd").args(&["/c", "cls"]).status().unwrap();
     }
 }
