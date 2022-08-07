@@ -1,4 +1,5 @@
 use std::thread::JoinHandle;
+use pcap::Device;
 use crate::{PacketSnooper, State};
 use crate::tests::complete_setup;
 
@@ -170,6 +171,7 @@ pub fn packet_snooper_abort_normal_test() {
     assert_eq!(*ps.end_thread.lock().unwrap(), true);
     assert_eq!(*ps.stop_thread.lock().unwrap(), false);
 
+    drop(ps);
     let mut ps = complete_setup();
     ps.start().unwrap();
     ps.stop().unwrap();
