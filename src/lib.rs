@@ -119,11 +119,13 @@ use pcap::{Capture, Device, Packet};
 use std::{io, thread};
 use std::error::Error;
 use std::io::{Write};
+use std::path::PathBuf;
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
+use crate::report_generator::ReportGenerator;
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -568,11 +570,15 @@ impl PacketSnooper {
     }
 
     fn consume_packets(rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+        //let report_generator = ReportGenerator::new(75, "hello.txt");
+
         move || {
             while let Ok(packet) = rx.recv() {
                 println!("---------------");
                 println!("{}", EthernetPacket::from_json(&packet).unwrap());
                 io::stdout().flush().unwrap();
+
+                //report_generator.push(EthernetPacket::from_json(&packet).unwrap());
             }
         }
     }
