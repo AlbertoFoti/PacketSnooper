@@ -1,24 +1,42 @@
 # Packet-Snooper
-A Rust cross-platform cli packet analyzer
+
+`packet_snooper` is a cross-platform library to analyze network traffic data written using the Rust Programming Language.
+
+It's available on Windows and UNIX-like Operating Systems such as Linux and macOS.
+
+It was developed as part of a University project (Politecnico of Turin, Italy. "System and Device Programming". Year 2022).
+
+<p align="center">
+  <img src="img/packet_snooper_logo.png" style="alignment: center" width="200" height="200" />
+</p>
+
 
 ## TCP/IP Architecture Support
 ### Layer 2
-    full-support: EthernetII
-    identification: Ethernet802.3
-    future support: ()
+````
+full-support: EthernetII
+identification: Ethernet802.3
+future support: ()
+````
 ### Layer 3 (Ethernet field "EtherType". IEEE 802.3)
-    full-support: IPv4, (IPv6), IPv6HopByHop
-    identification: ARP
-    future support: ()
+````
+full-support: IPv4, (IPv6), IPv6HopByHop
+identification: ARP
+future support: ()
+````
 ### Layer 4 ("Protocol Type" field of L3 protocols)
-    full-support: UDP, (TCP)
-    identification: (). Others: IGMP, ICMPv4, ICMPv6
-    future support: ()
+````
+full-support: UDP, (TCP)
+identification: (). Others: IGMP, ICMPv4, ICMPv6
+future support: ()
+````
 ### Upper Layers
-    full-support: ()
-    identification: FTP=20, SSH=22, SMPT=23, DNS=53, HTTP=80, POP3=110
-                    SFTP=115, SNMP=161, BGP=179, HTTPS=443
-    future support: ()
+````
+full-support: ()
+identification: FTP=20, SSH=22, SMPT=23, DNS=53, HTTP=80, POP3=110
+                SFTP=115, SNMP=161, BGP=179, HTTPS=443
+future support: ()
+````
 
 ## Architecture Overview
 ![This is an image](img/architecture.jpg)
