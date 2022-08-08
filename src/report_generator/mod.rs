@@ -4,6 +4,8 @@ use std::io;
 use std::io::Write;
 use crate::EthernetPacket;
 
+mod tests;
+
 #[derive(Debug, PartialEq)]
 /// Report Generator custom Error type RGError.
 pub struct RGError {
