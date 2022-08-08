@@ -19,7 +19,7 @@ jobs:
         - uses: actions/checkout@v3
         - name: Config
           if: matrix.os == 'ubuntu-latest'
-          run:
+          run: |
             sudo apt update
             sudo apt install cargo
             sudo apt install libpcap-dev
