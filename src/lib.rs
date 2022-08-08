@@ -108,7 +108,7 @@
 extern crate core;
 
 pub mod network_components;
-//pub mod report_generator;
+pub mod report_generator;
 pub mod utility;
 
 #[cfg(test)]
@@ -116,15 +116,14 @@ mod tests;
 
 use std::fmt::{Display, Formatter};
 use pcap::{Capture, Device, Packet};
-use std::{io, thread};
+use std::{thread};
 use std::error::Error;
-use std::io::{Write};
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
-//use crate::report_generator::ReportGenerator;
+use crate::report_generator::ReportGenerator;
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -402,7 +401,7 @@ impl PacketSnooper {
         let ( tx, rx ) = channel();
 
         self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
-        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(Box::new(rx))));
+        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(self.time_interval.as_secs(), Box::new(rx))));
 
         self.state = State::Working;
         Ok(())
@@ -568,16 +567,13 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
-        //let report_generator = ReportGenerator::new(75, "hello.txt");
+    fn consume_packets(time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+        // TODO: handle error case better
+        let mut report_generator = ReportGenerator::new(time_interval, "hello.txt").expect("Something went wrong");
 
         move || {
             while let Ok(packet) = rx.recv() {
-                println!("---------------");
-                println!("{}", EthernetPacket::from_json(&packet).unwrap());
-                io::stdout().flush().unwrap();
-
-                //report_generator.push(EthernetPacket::from_json(&packet).unwrap());
+                report_generator.push(&packet);
             }
         }
     }

@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::path::PathBuf;
+use std::io;
+use std::io::Write;
 use crate::EthernetPacket;
 
 #[derive(Debug, PartialEq)]
@@ -31,16 +32,18 @@ pub struct ReportGenerator {
 }
 
 impl ReportGenerator {
-    pub fn new(time_interval: u64, file_path: &str) -> Result<()> {
-        unimplemented!();
+    pub fn new(time_interval: u64, file_path: &str) -> Result<Self> {
+        Ok(Self {})
     }
 
-    pub fn push(&mut self, packet: EthernetPacket) {
-        unimplemented!();
+    pub fn push(&mut self, packet: &str) {
+        println!("---------------");
+        println!("{}", EthernetPacket::from_json(&packet).unwrap());
+        io::stdout().flush().unwrap();
     }
 
     fn generate_report(&self) -> Result<()> {
-        unimplemented!();
+        Ok(())
     }
 }
 
