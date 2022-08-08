@@ -88,13 +88,17 @@
 //! }
 //! ```
 
+// Easy tasks
+// TODO : MacOS as a github action workflow for CI/CD
+
 // Major tasks
-// TODO : timer for report generation implemented  (Samuele)
+// TODO : timer for report generation implemented (Samuele)
 // TODO : file report generation (Alberto)
 
 // Advanced (optional)
 // TODO : filters   (???)
 // TODO : --verbose report type (Alberto)
+// TODO : expanding the collection of protocols supported
 
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
