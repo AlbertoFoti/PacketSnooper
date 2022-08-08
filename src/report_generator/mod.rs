@@ -1,3 +1,8 @@
+//! # Report Generator
+//!
+//! Module to handle periodic report generation about the traffic analyzed.
+//!
+
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io;

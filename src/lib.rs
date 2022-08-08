@@ -23,7 +23,7 @@
 //! packet_snooper.stop().unwrap();
 //! packet_snooper.resume().unwrap();
 //! packet_snooper.end().unwrap();
-//! packet_snooper.abort();
+//! packet_snooper.abort().unwrap();
 //! ```
 //!
 //! # Suggested Application Structure to use packet_snooper framework
@@ -59,7 +59,7 @@
 //!            ...
 //!            match cmd {
 //!                "start" => { packet_snooper.start().unwrap(); },
-//!                "abort" => { packet_snooper.abort(); },
+//!                "abort" => { packet_snooper.abort().unwrap(); },
 //!                "exit" => { return; }
 //!                _ => { println ! ("Invalid command"); }
 //!            };
@@ -67,7 +67,7 @@
 //!        State::Working => {
 //!            ...
 //!            match cmd {
-//!                "abort" => { packet_snooper.abort(); },
+//!                "abort" => { packet_snooper.abort().unwrap(); },
 //!                "end" => { packet_snooper.end().unwrap(); },
 //!                "stop" => { packet_snooper.stop().unwrap(); },
 //!                "exit" => { return; }
@@ -77,7 +77,7 @@
 //!        State::Stopped => {
 //!            ...
 //!            match cmd {
-//!                "abort" => { packet_snooper.abort(); },
+//!                "abort" => { packet_snooper.abort().unwrap(); },
 //!                "end" => { packet_snooper.end().unwrap(); },
 //!                "resume" => { packet_snooper.resume().unwrap(); },
 //!                "exit" => { return; },
@@ -88,22 +88,20 @@
 //! }
 //! ```
 
-// Easy tasks
-// TODO : finish work on TCP  (Alberto)
-
 // Major tasks
 // TODO : timer for report generation implemented  (Samuele)
 // TODO : file report generation (Alberto)
-// TODO : in-depth concurrency testing (Albert, Samuele)
 
 // Advanced (optional)
 // TODO : filters   (???)
-// TODO : --verbose, --quiet report type (Alberto)
+// TODO : --verbose report type (Alberto)
 
 // Future stuff to do
-// TODO : complete documentation and check for correctness (Alberto, Samuele)
+// TODO : in-depth concurrency testing (Alberto, Samuele)
 // TODO : tests for IPv6 packet  (Alberto)
 // TODO : tests for TCP   (Alberto)
+// TODO : handling all error cases in a good way (...)
+// TODO : complete documentation and check for correctness (Alberto, Samuele)
 
 extern crate core;
 
@@ -514,17 +512,37 @@ impl PacketSnooper {
     /// # Examples
     ///
     /// ```
-    /// packet_snooper.abort();
+    /// packet_snooper.abort().unwrap();
     /// ```
-    pub fn abort(&mut self) {
+    ///
+    /// # Error
+    ///
+    /// - `Something went wrong inside the analyzer thread. Err returned as a result of join.`
+    /// - `Something went wrong inside the consumer thread. Err returned as a result of join.`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.abort() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn abort(&mut self) -> Result<()> {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
 
-        self.network_capture_thread.take().map(JoinHandle::join);
-        self.consumer_thread.take().map(JoinHandle::join);
+        match self.network_capture_thread.take().map(JoinHandle::join).unwrap() {
+            Ok(_) => (),
+            Err(_) => { return Err(PSError::new("Something went wrong inside the analyzer thread. Err returned as a result of join."))}
+        };
+        match self.consumer_thread.take().map(JoinHandle::join).unwrap() {
+            Ok(_) => (),
+            Err(_) => { return Err(PSError::new("Something went wrong inside the consumer thread. Err returned as a result of join."))}
+        };
 
         self.state = State::ConfigDevice;
+        Ok(())
     }
 
     fn retrieve_device(interface_name: &str) -> Result<Device> {
