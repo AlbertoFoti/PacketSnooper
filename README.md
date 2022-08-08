@@ -5,7 +5,7 @@
 </div>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI/CD](https://github.com/XXmorpheusX/PacketSnooper/actions/workflows/rust_workflow.yml/badge.svg?branch=main)](https://github.com/XXmorpheusX/PacketSnooper/actions/workflows/rust_workflow.yml)
+[![Rust-Workflow](https://github.com/XXmorpheusX/PacketSnooper/actions/workflows/rust_workflow.yml/badge.svg)](https://github.com/XXmorpheusX/PacketSnooper/actions/workflows/rust_workflow.yml)
 
 `packet_snooper` is a cross-platform library to analyze network traffic data written using the Rust Programming Language.
 
