@@ -1,5 +1,4 @@
 use std::thread::JoinHandle;
-use pcap::Device;
 use crate::{PacketSnooper, State};
 use crate::tests::complete_setup;
 
