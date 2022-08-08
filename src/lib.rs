@@ -89,25 +89,21 @@
 //! ```
 
 // Easy tasks
-// TODO : finish work on TCP
-// TODO : check if everything works on windows
+// TODO : finish work on TCP  (Alberto)
 
 // Major tasks
-// TODO : timer for report generation implemented
-// TODO : file report generation
-// TODO : in-depth concurrency testing
+// TODO : timer for report generation implemented  (Samuele)
+// TODO : file report generation (Alberto)
+// TODO : in-depth concurrency testing (Albert, Samuele)
 
 // Advanced (optional)
-// TODO : filters
-// TODO : --verbose, --quiet report type
-
-// Fixes
-// TODO :
+// TODO : filters   (???)
+// TODO : --verbose, --quiet report type (Alberto)
 
 // Future stuff to do
-// TODO : complete documentation and check for correctness
-// TODO : tests for IPv6 packet
-// TODO : tests for TCP
+// TODO : complete documentation and check for correctness (Alberto, Samuele)
+// TODO : tests for IPv6 packet  (Alberto)
+// TODO : tests for TCP   (Alberto)
 
 extern crate core;
 
