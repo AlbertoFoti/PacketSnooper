@@ -84,13 +84,15 @@ pub enum Format {
 
 pub struct ReportGenerator {
     file_path: PathBuf,
+    timer: PeriodicTimer,
     data: Vec<u8>,
 }
 
 impl ReportGenerator {
-    pub fn new(file_path: PathBuf) -> Result<Self> {
+    pub fn new(file_path: PathBuf, time_interval: u64) -> Result<Self> {
         Ok(Self {
             file_path,
+            timer: PeriodicTimer::new(time_interval),
             data: Vec::new(),
         })
     }

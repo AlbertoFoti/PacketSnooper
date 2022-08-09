@@ -595,9 +595,8 @@ impl PacketSnooper {
 
     fn consume_packets(file_path: PathBuf, time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
-            let mut periodic_timer = PeriodicTimer::new(time_interval);
             // TODO: handle error case better
-            let mut report_generator = ReportGenerator::new(file_path).expect("Something went wrong");
+            let mut report_generator = ReportGenerator::new(file_path, time_interval).expect("Something went wrong");
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);
             }
