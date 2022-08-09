@@ -40,18 +40,30 @@ impl Error for RGError {}
 
 type Result<T> = std::result::Result<T, RGError>;
 
-pub struct PeriodicTimer {
-    time_interval: u64,
-    counting_thread: Option<JoinHandle<()>>,
-    end_thread: Arc<Mutex<bool>>
+
+pub enum Format {
+    Raw,
+    Verbose,
+    Quiet,
 }
 
-impl PeriodicTimer {
-    pub fn new(time_interval: u64) -> Self {
+pub struct ReportGenerator {
+    file_path: PathBuf,
+    time_interval: u64,
+
+    counting_thread: Option<JoinHandle<()>>,
+    end_thread: Arc<Mutex<bool>>,
+
+    data: Vec<u8>,
+}
+
+impl ReportGenerator {
+    pub fn new(file_path: PathBuf, time_interval: u64) -> Result<Self> {
         let end_thread = Arc::new(Mutex::new(false));
         let end_thread2 = end_thread.clone();
 
-        Self {
+        Ok(Self {
+            file_path,
             time_interval,
             counting_thread: Option::from(thread::spawn(move || {
                 let mut i = 0;
@@ -64,35 +76,6 @@ impl PeriodicTimer {
                 println!("Ending periodic timer thread");
             })),
             end_thread,
-        }
-    }
-}
-
-impl Drop for PeriodicTimer {
-    fn drop(&mut self) {
-        *self.end_thread.lock().unwrap() = true;
-        self.counting_thread.take().map(JoinHandle::join).unwrap();
-        println!("Dropping Periodic timer.")
-    }
-}
-
-pub enum Format {
-    Raw,
-    Verbose,
-    Quiet,
-}
-
-pub struct ReportGenerator {
-    file_path: PathBuf,
-    timer: PeriodicTimer,
-    data: Vec<u8>,
-}
-
-impl ReportGenerator {
-    pub fn new(file_path: PathBuf, time_interval: u64) -> Result<Self> {
-        Ok(Self {
-            file_path,
-            timer: PeriodicTimer::new(time_interval),
             data: Vec::new(),
         })
     }
@@ -131,6 +114,8 @@ impl ReportGenerator {
 
 impl Drop for ReportGenerator {
     fn drop(&mut self) {
-        println!("Dropping Report Generator...");
+        *self.end_thread.lock().unwrap() = true;
+        self.counting_thread.take().map(JoinHandle::join).unwrap();
+        println!("Dropping Report Generator");
     }
 }

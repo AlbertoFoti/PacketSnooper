@@ -129,7 +129,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
-use crate::report_generator::{PeriodicTimer, ReportGenerator};
+use crate::report_generator::{ReportGenerator};
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
