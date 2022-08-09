@@ -123,6 +123,7 @@ use std::fmt::{Display, Formatter};
 use pcap::{Capture, Device, Packet};
 use std::{thread};
 use std::error::Error;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
@@ -208,8 +209,8 @@ pub struct PacketSnooper {
     pub current_interface: String,
     /// Time interval (until report generation)
     pub time_interval: Duration,
-    /// File name (as target of report generation)
-    pub file_name: String,
+    /// File Path (as target of report generation)
+    pub file_path: PathBuf,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -229,7 +230,7 @@ impl PacketSnooper {
             state: State::ConfigDevice,
             current_interface: String::from(Device::lookup().unwrap().name),
             time_interval: Duration::from_secs(60),
-            file_name: "output.txt".to_owned(),
+            file_path: PathBuf::from("output.txt"),
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -359,10 +360,10 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn set_file_name(&mut self, file_name: &str) -> Result<()>{
+    pub fn set_file_name(&mut self, file_path: &str) -> Result<()>{
         if self.state == State::ConfigFile {
-            // TODO check filename is correct
-            self.file_name = file_name.to_owned();
+            // TODO check file path is correct
+            self.file_path = PathBuf::from(file_path);
             self.state = State::Ready;
             Ok(())
         } else {
@@ -406,7 +407,7 @@ impl PacketSnooper {
         let ( tx, rx ) = channel();
 
         self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
-        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(self.file_name.as_str(), self.time_interval.as_secs(), Box::new(rx))));
+        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(self.file_path.clone(), self.time_interval.as_secs(), Box::new(rx))));
 
         self.state = State::Working;
         Ok(())
@@ -592,9 +593,9 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(file_name: &str, time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_path: PathBuf, time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         // TODO: handle error case better
-        let mut report_generator = ReportGenerator::new(time_interval, file_name).expect("Something went wrong");
+        let mut report_generator = ReportGenerator::new(time_interval, file_path).expect("Something went wrong");
 
         move || {
             while let Ok(packet) = rx.recv() {
@@ -619,7 +620,7 @@ impl Display for PacketSnooper {
         }.unwrap();
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
         write!(f, "\nTime interval before report generation : {:?}", self.time_interval).unwrap();
-        write!(f, "\nFile name Target for report generation: {:?}", self.file_name)
+        write!(f, "\nFile path Target for report generation: {:?}", self.file_path)
     }
 }
 

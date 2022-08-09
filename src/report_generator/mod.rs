@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use std::fs::OpenOptions;
 use std::{fs, io};
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::EthernetPacket;
 
 mod tests;
@@ -43,14 +43,14 @@ pub enum Format {
 }
 
 pub struct ReportGenerator {
-    file_name: String,
+    file_path: PathBuf,
     data: Vec<u8>,
 }
 
 impl ReportGenerator {
-    pub fn new(time_interval: u64, file_name: &str) -> Result<Self> {
+    pub fn new(time_interval: u64, file_path: PathBuf) -> Result<Self> {
         Ok(Self {
-            file_name: file_name.to_string(),
+            file_path,
             data: Vec::new(),
         })
     }
@@ -61,7 +61,7 @@ impl ReportGenerator {
         self.data.append(&mut Vec::from("\n----------------\n"));
         self.data.append(&mut Vec::from(dump_packet));
 
-        //self.generate_report();
+        self.generate_report();
     }
 
     fn format_packet(&self, format: Format, packet: &str) -> Vec<u8> {
@@ -76,11 +76,12 @@ impl ReportGenerator {
     }
 
     fn generate_report(&self) -> Result<()> {
+        // TODO: handle error cases better
         let mut x = OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(true)
-            .open(Path::new(self.file_name.as_str())).expect("Something went wrong while creating the file for report generation.");
+            .open(self.file_path.as_path()).expect("Something went wrong while creating the file for report generation.");
         let y = x.write(self.data.as_slice()).expect("Something went wrong during the report generation file write.");
         Ok(())
     }
