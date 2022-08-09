@@ -98,10 +98,6 @@
 // TODO : filters   (???)
 // TODO : expanding the collection of protocols supported
 
-// Fixes:
-// TODO : Abort on End state creates an error (maybe solved)
-// TODO : Control errors on abort. Sometimes tests stop forever in abort().
-
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
 // TODO : tests for IPv6 packet  (Alberto)

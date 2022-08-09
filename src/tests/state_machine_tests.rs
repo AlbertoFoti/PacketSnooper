@@ -1,4 +1,5 @@
-use std::thread::JoinHandle;
+use std::thread::{JoinHandle, sleep};
+use std::time::Duration;
 use crate::{PacketSnooper, State};
 use crate::tests::complete_setup;
 
@@ -159,6 +160,18 @@ pub fn packet_snooper_end_in_invalid_state_test() {
 }
 
 #[test]
+pub fn packet_snooper_rapid_end_test() {
+    let mut ps = complete_setup();
+
+    let mut i = 5;
+    while i > 0 {
+        ps.start().unwrap();
+        ps.end().unwrap();
+        i -= 1;
+    }
+}
+
+#[test]
 pub fn packet_snooper_abort_normal_test() {
     let mut ps = complete_setup();
     ps.start().unwrap();
@@ -170,7 +183,7 @@ pub fn packet_snooper_abort_normal_test() {
     assert_eq!(*ps.end_thread.lock().unwrap(), true);
     assert_eq!(*ps.stop_thread.lock().unwrap(), false);
 
-    drop(ps);
+    sleep(Duration::from_secs(1));
     let mut ps = complete_setup();
     ps.start().unwrap();
     ps.stop().unwrap();
@@ -216,5 +229,18 @@ pub fn packet_snooper_abort_in_invalid_state_test() {
         ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
         ps.abort().unwrap();
         assert_eq!(ps.state, State::ConfigDevice);
+    }
+}
+
+#[test]
+pub fn packet_snooper_rapid_abort_test() {
+    let mut ps = complete_setup();
+
+    let mut i = 5;
+    while i > 0 {
+        let mut ps = complete_setup();
+        ps.start().unwrap();
+        ps.abort().unwrap();
+        i -= 1;
     }
 }
