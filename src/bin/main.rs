@@ -104,7 +104,8 @@ fn main() {
 fn get_data_from_user() -> Result<String, Error> {
     let mut buffer = String::new();
     io::stdin().lock().read_line(&mut buffer)?;
-    buffer.pop();
+    if cfg!(unix) { buffer.pop(); }
+    else if cfg!(windows) { buffer.pop(); buffer.pop(); }
     Ok(buffer)
 }
 
