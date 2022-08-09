@@ -406,7 +406,7 @@ impl PacketSnooper {
         let ( tx, rx ) = channel();
 
         self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
-        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(self.time_interval.as_secs(), Box::new(rx))));
+        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(self.file_name.as_str(), self.time_interval.as_secs(), Box::new(rx))));
 
         self.state = State::Working;
         Ok(())
@@ -592,9 +592,9 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_name: &str, time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         // TODO: handle error case better
-        let mut report_generator = ReportGenerator::new(time_interval, "hello.txt").expect("Something went wrong");
+        let mut report_generator = ReportGenerator::new(time_interval, file_name).expect("Something went wrong");
 
         move || {
             while let Ok(packet) = rx.recv() {
