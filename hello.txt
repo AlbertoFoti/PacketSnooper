@@ -1,0 +1,217 @@
+
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 93.184.220.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x6e8a, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0xd09e ]
+TCP      : 48496 -> 80
+ > [seq#: 1088481513, ACK#: 1308642891, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xfbc1, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a228ca84648434e1d]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 93.184.220.29 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x910d, flags: 0x00, frag-offset: 0, ttl: 55, header-checksum: 0xf71b ]
+TCP      : 80 -> 48496
+ > [seq#: 1308642891, ACK#: 1088481514, data-offset: 32B, flags: 0x10, windows-size: 135, checksum: 0xcce, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a48437620228c0906]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x41c7, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0xf36 ]
+TCP      : 46630 -> 80
+ > [seq#: 2899882856, ACK#: 308278569, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69861af989e036]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 216.58.209.35
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x6bf9, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x63a7 ]
+TCP      : 44286 -> 80
+ > [seq#: 2303142251, ACK#: 4245813373, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0x6b4a, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080acf69394a67b518ff]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xd5af, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x7b4d ]
+TCP      : 46626 -> 80
+ > [seq#: 3443423931, ACK#: 334398115, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69861a137452f7]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xf2a6, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x5e56 ]
+TCP      : 46632 -> 80
+ > [seq#: 2757291832, ACK#: 3153302589, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69861a376607c4]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xb5ef, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x9b0d ]
+TCP      : 46634 -> 80
+ > [seq#: 1271154745, ACK#: 3898692127, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69861a64c9d978]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x6d76, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0x6e86 ]
+TCP      : 80 -> 46634
+ > [seq#: 3898692127, ACK#: 1271154746, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x5ebc, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a64ca01784b67f712]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xd451, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0x7ab ]
+TCP      : 80 -> 46626
+ > [seq#: 334398115, ACK#: 3443423932, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x26f8, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a13747af64b67f6a9]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x77ec, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0x6410 ]
+TCP      : 80 -> 46632
+ > [seq#: 3153302589, ACK#: 2757291833, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x48ee, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a37662fc44b67f6b6]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xf7d8, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0xe423 ]
+TCP      : 80 -> 46630
+ > [seq#: 308278569, ACK#: 2899882857, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x2a5e, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080af98a08364b67f6aa]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 216.58.209.35 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x29a2, flags: 0x00, frag-offset: 0, ttl: 120, header-checksum: 0xadfe ]
+TCP      : 80 -> 44286
+ > [seq#: 4245813373, ACK#: 2303142252, data-offset: 32B, flags: 0x10, windows-size: 261, checksum: 0x92c4, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a67b540ffcf67aa21]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 93.184.220.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x6e8b, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0xd09d ]
+TCP      : 48496 -> 80
+ > [seq#: 1088481513, ACK#: 1308642891, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xfbc1, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a228cd04648437620]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 93.184.220.29 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x94b7, flags: 0x00, frag-offset: 0, ttl: 55, header-checksum: 0xf371 ]
+TCP      : 80 -> 48496
+ > [seq#: 1308642891, ACK#: 1088481514, data-offset: 32B, flags: 0x10, windows-size: 135, checksum: 0xe4cd, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a48439e20228c0906]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 216.58.209.35
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x6bfa, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x63a6 ]
+TCP      : 44286 -> 80
+ > [seq#: 2303142251, ACK#: 4245813373, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0x6b4a, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080acf69614a67b540ff]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x41c8, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0xf35 ]
+TCP      : 46630 -> 80
+ > [seq#: 2899882856, ACK#: 308278569, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69ae1af98a0836]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xb5f0, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x9b0c ]
+TCP      : 46634 -> 80
+ > [seq#: 1271154745, ACK#: 3898692127, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69ae1a64ca0178]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xf2a7, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x5e55 ]
+TCP      : 46632 -> 80
+ > [seq#: 2757291832, ACK#: 3153302589, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69ae1c37662fc4]
+ Payload > []
+----------------
+Ethernet : e0:b9:e5:30:ef:98 -> 00:f4:8d:73:89:db 
+IPv4     : 192.168.1.29 -> 108.138.187.119
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xd5b0, flags: 0x40, frag-offset: 0, ttl: 64, header-checksum: 0x7b4c ]
+TCP      : 46626 -> 80
+ > [seq#: 3443423931, ACK#: 334398115, data-offset: 32B, flags: 0x10, windows-size: 501, checksum: 0xe9ed, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a4b69ae1c13747af6]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x6e20, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0x6ddc ]
+TCP      : 80 -> 46634
+ > [seq#: 3898692127, ACK#: 1271154746, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x36bb, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a64ca29794b67f712]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xfbd5, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0xe026 ]
+TCP      : 80 -> 46630
+ > [seq#: 308278569, ACK#: 2899882857, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x25e, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080af98a30364b67f6aa]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0xd5d6, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0x626 ]
+TCP      : 80 -> 46626
+ > [seq#: 334398115, ACK#: 3443423932, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0xfef6, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a1374a2f74b67f6a9]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 108.138.187.119 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x784f, flags: 0x00, frag-offset: 0, ttl: 245, header-checksum: 0x63ad ]
+TCP      : 80 -> 46632
+ > [seq#: 3153302589, ACK#: 2757291833, data-offset: 32B, flags: 0x10, windows-size: 131, checksum: 0x20ee, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a376657c44b67f6b6]
+ Payload > []
+----------------
+Ethernet : 00:f4:8d:73:89:db -> e0:b9:e5:30:ef:98 
+IPv4     : 216.58.209.35 -> 192.168.1.29
+ > [version: 4, header-length: 20B, diff-serv: 0x00, tot-length: 52B, identification: 0x477f, flags: 0x00, frag-offset: 0, ttl: 120, header-checksum: 0x9021 ]
+TCP      : 80 -> 44286
+ > [seq#: 4245813373, ACK#: 2303142252, data-offset: 32B, flags: 0x10, windows-size: 261, checksum: 0x6ac4, urgent-pointer: 0x00 ]
+HTTP    : Protocol details unknown
+ Options > [0101080a67b568ffcf67aa21]
+ Payload > []
