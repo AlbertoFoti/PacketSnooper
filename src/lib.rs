@@ -101,7 +101,7 @@
 // TODO : expanding the collection of protocols supported
 
 // Fixes:
-// TODO : Path instead of &str filename
+// TODO : Abort on End state creates an error
 
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)

@@ -10,7 +10,7 @@ use std::{fs, io};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use crate::EthernetPacket;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::thread;
 
 mod tests;
@@ -45,7 +45,8 @@ pub enum Format {
 }
 
 pub struct ReportGenerator {
-    periodic_timer: u64,
+    period_start: Instant,
+    time_interval: u64,
     file_path: PathBuf,
     data: Vec<u8>,
 }
@@ -53,7 +54,8 @@ pub struct ReportGenerator {
 impl ReportGenerator {
     pub fn new(time_interval: u64, file_path: PathBuf) -> Result<Self> {
         Ok(Self {
-            periodic_timer: time_interval,
+            period_start: Instant::now(),
+            time_interval,
             file_path,
             data: Vec::new(),
         })
@@ -64,10 +66,6 @@ impl ReportGenerator {
 
         self.data.append(&mut Vec::from("\n----------------\n"));
         self.data.append(&mut Vec::from(dump_packet));
-
-        thread::sleep(std::time::Duration::new(self.periodic_timer, 0));
-        println!("Son passati {:?} secondi",self.periodic_timer);
-        self.generate_report();
     }
 
     fn format_packet(&self, format: Format, packet: &str) -> Vec<u8> {
@@ -81,7 +79,7 @@ impl ReportGenerator {
         }
     }
 
-    fn generate_report(&self) -> Result<()> {
+    fn generate_report(&mut self) -> Result<()> {
         // TODO: handle error cases better
         let mut x = OpenOptions::new()
             .write(true)
@@ -90,13 +88,13 @@ impl ReportGenerator {
             .open(self.file_path.as_path()).expect("Something went wrong while creating the file for report generation.");
         let y = x.write(self.data.as_slice()).expect("Something went wrong during the report generation file write.");
 
-        // TODO : clearing data vector
+        self.data.clear();
         Ok(())
     }
 }
 
 impl Drop for ReportGenerator {
     fn drop(&mut self) {
-
+        println!("Dropping Report Generator...");
     }
 }
