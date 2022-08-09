@@ -100,6 +100,9 @@
 // TODO : --verbose report type (Alberto)
 // TODO : expanding the collection of protocols supported
 
+// Fixes:
+// TODO : Path instead of &str filename
+
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
 // TODO : tests for IPv6 packet  (Alberto)
