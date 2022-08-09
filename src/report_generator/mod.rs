@@ -68,7 +68,6 @@ impl ReportGenerator {
         thread::sleep(std::time::Duration::new(self.periodic_timer, 0));
         println!("Son passati {:?} secondi",self.periodic_timer);
         self.generate_report();
-
     }
 
     fn format_packet(&self, format: Format, packet: &str) -> Vec<u8> {
@@ -90,6 +89,8 @@ impl ReportGenerator {
             .truncate(true)
             .open(self.file_path.as_path()).expect("Something went wrong while creating the file for report generation.");
         let y = x.write(self.data.as_slice()).expect("Something went wrong during the report generation file write.");
+
+        // TODO : clearing data vector
         Ok(())
     }
 }
