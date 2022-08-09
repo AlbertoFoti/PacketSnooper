@@ -125,6 +125,8 @@ impl ReportGenerator {
 
     pub fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
         let clone_inner_report_generator = self.inner_struct.clone();
+        let time_interval = clone_inner_report_generator.lock().unwrap().time_interval;
+
         self.counting_thread = Option::from(thread::spawn(move || {
             let mut count = 0;
             loop {
@@ -136,7 +138,7 @@ impl ReportGenerator {
 
                 thread::sleep(Duration::from_secs(1));
                 count += 1;
-                if count == clone_inner_report_generator.lock().unwrap().time_interval && *end_thread.lock().unwrap() != true && *stop_thread.lock().unwrap() != true {
+                if count == time_interval && *end_thread.lock().unwrap() != true && *stop_thread.lock().unwrap() != true {
                     clone_inner_report_generator.lock().unwrap().generate_report().unwrap();
                     count = 0;
                 }

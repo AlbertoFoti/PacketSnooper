@@ -92,21 +92,21 @@ pub fn packet_snooper_set_time_interval_in_invalid_state_test() {
 }
 
 #[test]
-pub fn packet_snooper_set_file_name_interval_normal_test() {
-    let file_name = "hello.txt";
+pub fn packet_snooper_set_file_path_interval_normal_test() {
+    let file_path = "hello.txt";
     let mut ps = PacketSnooper::new();
 
     ps.state = State::ConfigFile; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-    assert!(ps.set_file_path(file_name).is_ok());
+    assert!(ps.set_file_path(file_path).is_ok());
 
     assert_eq!(ps.state, State::Ready);
-    assert_eq!(ps.file_path, PathBuf::from(file_name));
+    assert_eq!(ps.file_path, PathBuf::from(file_path));
 }
 
 #[test]
-pub fn packet_snooper_set_file_name_in_invalid_state_test() {
-    let file_name = "hello.txt";
-    let error_str = "Invalid call on set_file_name when in an illegal state.";
+pub fn packet_snooper_set_file_path_in_invalid_state_test() {
+    let file_path = "hello.txt";
+    let error_str = "Invalid call on set_file_path when in an illegal state.";
     let mut ps = PacketSnooper::new();
 
     let invalid_states = [State::ConfigDevice, State::ConfigTimeInterval, State::Ready, State::Working, State::Stopped];
@@ -114,14 +114,14 @@ pub fn packet_snooper_set_file_name_in_invalid_state_test() {
 
     for state in invalid_states {
         ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-        let res = ps.set_file_path(file_name);
+        let res = ps.set_file_path(file_path);
         assert!(res.is_err());
         assert_eq!(res.unwrap_err().message, error_str);
     }
 
     for state in valid_states {
         ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-        let res = ps.set_file_path(file_name);
+        let res = ps.set_file_path(file_path);
         assert!(res.is_ok());
     }
 }

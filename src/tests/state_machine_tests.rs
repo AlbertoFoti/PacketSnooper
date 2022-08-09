@@ -234,8 +234,6 @@ pub fn packet_snooper_abort_in_invalid_state_test() {
 
 #[test]
 pub fn packet_snooper_rapid_abort_test() {
-    let mut ps = complete_setup();
-
     let mut i = 5;
     while i > 0 {
         let mut ps = complete_setup();

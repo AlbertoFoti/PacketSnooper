@@ -14,12 +14,12 @@ pub mod state_machine_tests;
 pub fn complete_setup() -> PacketSnooper {
     let interface_name = Device::lookup().unwrap().name;
     let time_interval = 75;
-    let file_name = "hello.txt";
+    let file_path = "hello.txt";
 
     PacketSnooper::new().with_details(
         interface_name.as_str(),
         time_interval,
-        file_name,
+        file_path,
     ).unwrap()
 }
 
