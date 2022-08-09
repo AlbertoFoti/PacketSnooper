@@ -55,7 +55,7 @@ fn main() {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
                             "start" => { packet_snooper.start().unwrap(); },
-                            "abort" => { packet_snooper.abort(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
                             "exit" => { return; }
                             _ => { println!("Invalid command. Retry. Press any key to continue"); wait_for_key_press(); }
                         };
@@ -70,7 +70,7 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
                             "end" => { packet_snooper.end().unwrap(); },
                             "stop" => { packet_snooper.stop().unwrap(); },
                             "exit" => { return; }
@@ -87,7 +87,7 @@ fn main() {
                 match command {
                     Ok(cmd) => {
                         match cmd.to_lowercase().as_str() {
-                            "abort" => { packet_snooper.abort(); },
+                            "abort" => { packet_snooper.abort().unwrap(); },
                             "end" => { packet_snooper.end().unwrap(); },
                             "resume" => { packet_snooper.resume().unwrap(); },
                             "exit" => { return; }
@@ -104,7 +104,8 @@ fn main() {
 fn get_data_from_user() -> Result<String, Error> {
     let mut buffer = String::new();
     io::stdin().lock().read_line(&mut buffer)?;
-    buffer.pop();
+    if cfg!(unix) { buffer.pop(); }
+    else if cfg!(windows) { buffer.pop(); buffer.pop(); }
     Ok(buffer)
 }
 

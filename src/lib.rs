@@ -23,7 +23,7 @@
 //! packet_snooper.stop().unwrap();
 //! packet_snooper.resume().unwrap();
 //! packet_snooper.end().unwrap();
-//! packet_snooper.abort();
+//! packet_snooper.abort().unwrap();
 //! ```
 //!
 //! # Suggested Application Structure to use packet_snooper framework
@@ -59,7 +59,7 @@
 //!            ...
 //!            match cmd {
 //!                "start" => { packet_snooper.start().unwrap(); },
-//!                "abort" => { packet_snooper.abort(); },
+//!                "abort" => { packet_snooper.abort().unwrap(); },
 //!                "exit" => { return; }
 //!                _ => { println ! ("Invalid command"); }
 //!            };
@@ -67,7 +67,7 @@
 //!        State::Working => {
 //!            ...
 //!            match cmd {
-//!                "abort" => { packet_snooper.abort(); },
+//!                "abort" => { packet_snooper.abort().unwrap(); },
 //!                "end" => { packet_snooper.end().unwrap(); },
 //!                "stop" => { packet_snooper.stop().unwrap(); },
 //!                "exit" => { return; }
@@ -77,7 +77,7 @@
 //!        State::Stopped => {
 //!            ...
 //!            match cmd {
-//!                "abort" => { packet_snooper.abort(); },
+//!                "abort" => { packet_snooper.abort().unwrap(); },
 //!                "end" => { packet_snooper.end().unwrap(); },
 //!                "resume" => { packet_snooper.resume().unwrap(); },
 //!                "exit" => { return; },
@@ -89,29 +89,29 @@
 //! ```
 
 // Easy tasks
-// TODO : finish work on TCP
-// TODO : check if everything works on windows
+// TODO : MacOS as a github action workflow for CI/CD
 
 // Major tasks
-// TODO : timer for report generation implemented
-// TODO : file report generation
-// TODO : in-depth concurrency testing
+// TODO : expanding state machine to allow multiple kinds of report type
 
 // Advanced (optional)
-// TODO : filters
-// TODO : --verbose, --quiet report type
+// TODO : filters   (???)
+// TODO : expanding the collection of protocols supported
 
-// Fixes
-// TODO :
+// Fixes:
+// TODO : Abort on End state creates an error (maybe solved)
 
 // Future stuff to do
-// TODO : complete documentation and check for correctness
-// TODO : tests for IPv6 packet
-// TODO : tests for TCP
+// TODO : in-depth concurrency testing (Alberto, Samuele)
+// TODO : tests for IPv6 packet  (Alberto)
+// TODO : tests for TCP   (Alberto)
+// TODO : handling all error cases in a good way (...)
+// TODO : complete documentation and check for correctness (Alberto, Samuele)
 
 extern crate core;
 
 pub mod network_components;
+pub mod report_generator;
 pub mod utility;
 
 #[cfg(test)]
@@ -119,14 +119,15 @@ mod tests;
 
 use std::fmt::{Display, Formatter};
 use pcap::{Capture, Device, Packet};
-use std::{io, thread};
+use std::{thread};
 use std::error::Error;
-use std::io::{Write};
+use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
+use crate::report_generator::{ReportGenerator};
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -206,8 +207,8 @@ pub struct PacketSnooper {
     pub current_interface: String,
     /// Time interval (until report generation)
     pub time_interval: Duration,
-    /// File name (as target of report generation)
-    pub file_name: String,
+    /// File Path (as target of report generation)
+    pub file_path: PathBuf,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -227,7 +228,7 @@ impl PacketSnooper {
             state: State::ConfigDevice,
             current_interface: String::from(Device::lookup().unwrap().name),
             time_interval: Duration::from_secs(60),
-            file_name: "output.txt".to_owned(),
+            file_path: PathBuf::from("output.txt"),
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -247,10 +248,10 @@ impl PacketSnooper {
     ///             time_interval,
     ///             file_name).expect("Something went wrong.");
     /// ```
-    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_name: &str) -> Result<PacketSnooper> {
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
-        self.set_file_name(file_name)?;
+        self.set_file_name(file_path)?;
         Ok(self)
     }
 
@@ -357,10 +358,10 @@ impl PacketSnooper {
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn set_file_name(&mut self, file_name: &str) -> Result<()>{
+    pub fn set_file_name(&mut self, file_path: &str) -> Result<()>{
         if self.state == State::ConfigFile {
-            // TODO check filename is correct
-            self.file_name = file_name.to_owned();
+            // TODO check file path is correct
+            self.file_path = PathBuf::from(file_path);
             self.state = State::Ready;
             Ok(())
         } else {
@@ -397,14 +398,21 @@ impl PacketSnooper {
 
         *self.stop_thread.lock().unwrap() = false;
         *self.end_thread.lock().unwrap() = false;
-        let stop_thread = self.stop_thread.clone();
-        let stop_thread_cv = self.stop_thread_cv.clone();
-        let end_thread = self.end_thread.clone();
 
         let ( tx, rx ) = channel();
 
-        self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
-        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(Box::new(rx))));
+        self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(
+            interface_name,
+            self.stop_thread.clone(),
+            self.stop_thread_cv.clone(),
+            self.end_thread.clone(),
+            tx)));
+        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(
+            self.file_path.clone(),
+            self.time_interval.as_secs(),
+            self.stop_thread.clone(),
+            self.stop_thread_cv.clone(),
+            Box::new(rx))));
 
         self.state = State::Working;
         Ok(())
@@ -517,17 +525,47 @@ impl PacketSnooper {
     /// # Examples
     ///
     /// ```
-    /// packet_snooper.abort();
+    /// packet_snooper.abort().unwrap();
     /// ```
-    pub fn abort(&mut self) {
+    ///
+    /// # Error
+    ///
+    /// - `Something went wrong inside the analyzer thread. Err returned as a result of join.`
+    /// - `Something went wrong inside the consumer thread. Err returned as a result of join.`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// match packet_snooper.abort() {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn abort(&mut self) -> Result<()> {
         *self.end_thread.lock().unwrap() = true;
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
 
-        self.network_capture_thread.take().map(JoinHandle::join);
-        self.consumer_thread.take().map(JoinHandle::join);
+        match self.network_capture_thread.take() {
+            Some(res) => {
+                match res.join() {
+                    Ok(_) => (),
+                    Err(_) => { return Err(PSError::new("Something went wrong inside the analyzer thread. Err returned as a result of join."))}
+                }
+            },
+            None => (),
+        };
+        match self.consumer_thread.take() {
+            Some(res) => {
+                match res.join() {
+                    Ok(_) => (),
+                    Err(_) => { return Err(PSError::new("Something went wrong inside the consumer thread. Err returned as a result of join."))}
+                }
+            },
+            None => (),
+        };
 
         self.state = State::ConfigDevice;
+        Ok(())
     }
 
     fn retrieve_device(interface_name: &str) -> Result<Device> {
@@ -570,12 +608,13 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
+            // TODO: handle error case better
+            let mut report_generator = ReportGenerator::new(file_path, time_interval, stop_thread, stop_thread_cv).expect("Something went wrong");
+
             while let Ok(packet) = rx.recv() {
-                println!("---------------");
-                println!("{}", EthernetPacket::from_json(&packet).unwrap());
-                io::stdout().flush().unwrap();
+                report_generator.push(&packet);
             }
         }
     }
@@ -596,7 +635,7 @@ impl Display for PacketSnooper {
         }.unwrap();
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
         write!(f, "\nTime interval before report generation : {:?}", self.time_interval).unwrap();
-        write!(f, "\nFile name Target for report generation: {:?}", self.file_name)
+        write!(f, "\nFile path Target for report generation: {:?}", self.file_path)
     }
 }
 

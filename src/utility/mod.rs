@@ -1,3 +1,8 @@
+//! # Utility
+//!
+//! Module to collect useful functions.
+//!
+
 use std::convert::AsMut;
 use std::fmt::{Write};
 
