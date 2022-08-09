@@ -9,8 +9,8 @@ use std::fs::OpenOptions;
 use std::{fs, io};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use crate::EthernetPacket;
+use std::sync::{Arc, Condvar, Mutex};
+use crate::{EthernetPacket, PacketSnooper};
 use std::time::{Duration, Instant};
 use std::thread;
 use std::thread::JoinHandle;
@@ -58,7 +58,7 @@ pub struct ReportGenerator {
 }
 
 impl ReportGenerator {
-    pub fn new(file_path: PathBuf, time_interval: u64) -> Result<Self> {
+    pub fn new(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<Self> {
         let end_thread = Arc::new(Mutex::new(false));
         let end_thread2 = end_thread.clone();
 
@@ -66,12 +66,21 @@ impl ReportGenerator {
             file_path,
             time_interval,
             counting_thread: Option::from(thread::spawn(move || {
-                let mut i = 0;
+                let mut count = 0;
                 loop {
+                    if *end_thread2.lock().unwrap() == true { return; }
+                    let mut stop_flag = *stop_thread.lock().unwrap();
+                    while stop_flag == true {
+                        stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
+                    }
+
                     println!("Elapsed time {}", i);
                     thread::sleep(Duration::from_secs(1));
-                    i += 1;
-                    if *end_thread2.lock().unwrap() == true { return; }
+                    count += 1;
+                    if i == time_interval {
+                        
+                        count = 0;
+                    }
                 }
                 println!("Ending periodic timer thread");
             })),
@@ -89,7 +98,7 @@ impl ReportGenerator {
 
     fn format_packet(&self, format: Format, packet: &str) -> Vec<u8> {
         match format {
-            Format::Raw=> { Vec::from(packet) },
+            Format::Raw => { Vec::from(packet) },
             Format::Verbose => {
                 let ether_packet = EthernetPacket::from_json(&packet).unwrap();
                 Vec::from(format!("{}", ether_packet).to_string().as_str())

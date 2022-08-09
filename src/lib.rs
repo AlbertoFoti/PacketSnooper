@@ -406,8 +406,18 @@ impl PacketSnooper {
 
         let ( tx, rx ) = channel();
 
-        self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(interface_name, stop_thread, stop_thread_cv, end_thread, tx)));
-        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(self.file_path.clone(), self.time_interval.as_secs(), Box::new(rx))));
+        self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(
+            interface_name,
+            self.stop_thread.clone(),
+            self.stop_thread_cv.clone(),
+            self.end_thread.clone(),
+            tx)));
+        self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(
+            self.file_path.clone(),
+            self.time_interval.as_secs(),
+            self.stop_thread.clone(),
+            self.stop_thread_cv.clone(),
+            Box::new(rx))));
 
         self.state = State::Working;
         Ok(())
@@ -593,10 +603,11 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(file_path: PathBuf, time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
             // TODO: handle error case better
-            let mut report_generator = ReportGenerator::new(file_path, time_interval).expect("Something went wrong");
+            let mut report_generator = ReportGenerator::new(file_path, time_interval, stop_thread, stop_thread_cv).expect("Something went wrong");
+
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);
             }
