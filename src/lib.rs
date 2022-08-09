@@ -129,7 +129,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
-use crate::report_generator::ReportGenerator;
+use crate::report_generator::{PeriodicTimer, ReportGenerator};
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -594,10 +594,10 @@ impl PacketSnooper {
     }
 
     fn consume_packets(file_path: PathBuf, time_interval: u64, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
-        // TODO: handle error case better
-        let mut report_generator = ReportGenerator::new(time_interval, file_path).expect("Something went wrong");
-
         move || {
+            let mut periodic_timer = PeriodicTimer::new(time_interval);
+            // TODO: handle error case better
+            let mut report_generator = ReportGenerator::new(file_path).expect("Something went wrong");
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);
             }

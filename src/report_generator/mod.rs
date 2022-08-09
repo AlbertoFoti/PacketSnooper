@@ -9,9 +9,11 @@ use std::fs::OpenOptions;
 use std::{fs, io};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use crate::EthernetPacket;
 use std::time::{Duration, Instant};
 use std::thread;
+use std::thread::JoinHandle;
 
 mod tests;
 
@@ -38,6 +40,42 @@ impl Error for RGError {}
 
 type Result<T> = std::result::Result<T, RGError>;
 
+pub struct PeriodicTimer {
+    time_interval: u64,
+    counting_thread: Option<JoinHandle<()>>,
+    end_thread: Arc<Mutex<bool>>
+}
+
+impl PeriodicTimer {
+    pub fn new(time_interval: u64) -> Self {
+        let end_thread = Arc::new(Mutex::new(false));
+        let end_thread2 = end_thread.clone();
+
+        Self {
+            time_interval,
+            counting_thread: Option::from(thread::spawn(move || {
+                let mut i = 0;
+                loop {
+                    println!("Elapsed time {}", i);
+                    thread::sleep(Duration::from_secs(1));
+                    i += 1;
+                    if *end_thread2.lock().unwrap() == true { return; }
+                }
+                println!("Ending periodic timer thread");
+            })),
+            end_thread,
+        }
+    }
+}
+
+impl Drop for PeriodicTimer {
+    fn drop(&mut self) {
+        *self.end_thread.lock().unwrap() = true;
+        self.counting_thread.take().map(JoinHandle::join).unwrap();
+        println!("Dropping Periodic timer.")
+    }
+}
+
 pub enum Format {
     Raw,
     Verbose,
@@ -45,17 +83,13 @@ pub enum Format {
 }
 
 pub struct ReportGenerator {
-    period_start: Instant,
-    time_interval: u64,
     file_path: PathBuf,
     data: Vec<u8>,
 }
 
 impl ReportGenerator {
-    pub fn new(time_interval: u64, file_path: PathBuf) -> Result<Self> {
+    pub fn new(file_path: PathBuf) -> Result<Self> {
         Ok(Self {
-            period_start: Instant::now(),
-            time_interval,
             file_path,
             data: Vec::new(),
         })
