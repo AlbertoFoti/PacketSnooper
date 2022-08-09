@@ -11,12 +11,12 @@
 //! ```
 //! let interface_name: &str = "eth0";
 //! let time_interval: u64 = 60;
-//! let file_name: &str = "hello.txt";
+//! let file_path: &str = "hello.txt";
 //!
 //! let mut packet_snooper = PacketSnooper::new().with_details(
 //!             interface_name,
 //!             time_interval,
-//!             file_name).expect("Something went wrong.");  // It's now in state State::Ready
+//!             file_path).expect("Something went wrong.");  // It's now in state State::Ready
 //!
 //! // possible operations
 //! packet_snooper.start().unwrap();
@@ -50,7 +50,7 @@
 //!        },
 //!        State::ConfigFile => {
 //!            ...
-//!            match packet_snooper.set_file_name(file_name) {
+//!            match packet_snooper.set_file_path(file_path) {
 //!                Ok(_) => { continue; },
 //!                Err(e) => { println!("{}", e); },
 //!            }
@@ -182,7 +182,7 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
-/// match packet_snooper.set_file_name("hello.txt") {
+/// match packet_snooper.set_file_path("hello.txt") {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
@@ -190,11 +190,11 @@ pub enum State {
 /// ```
 /// let interface_name: &str = "eth0";
 /// let time_interval: u64 = 75;
-/// let file_name: &str = "dump.txt";
+/// let file_path: &str = "dump.txt";
 /// let mut packet_snooper = PacketSnooper::new().with_details(
 ///             interface_name,
 ///             time_interval,
-///             file_name).expect("Something went wrong.");
+///             file_path).expect("Something went wrong.");
 /// ```
 pub struct PacketSnooper {
     /// Internal state (for configuration and management of operations purposes)
@@ -247,7 +247,7 @@ impl PacketSnooper {
     pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
-        self.set_file_name(file_path)?;
+        self.set_file_path(file_path)?;
         Ok(self)
     }
 
@@ -323,7 +323,7 @@ impl PacketSnooper {
         }
     }
 
-    /// Set *`file name`* (as report generation target) inside PacketSnooper struct.
+    /// Set *`file path`* (as report generation target) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
     /// Transitions from ConfigFile state to Ready state.
@@ -333,35 +333,35 @@ impl PacketSnooper {
     ///
     /// Simplified call (without error handling)
     /// ```
-    /// let file_name: &str = "hello.txt";
-    /// packet_snooper.set_file_name(file_name).unwrap();
+    /// let file_path: &str = "hello.txt";
+    /// packet_snooper.set_file_path(file_path).unwrap();
     /// ```
     /// ```
-    /// packet_snooper.set_file_name("hello.txt").unwrap();
+    /// packet_snooper.set_file_path("hello.txt").unwrap();
     /// ```
     ///
     /// # Error
     ///
     /// - `Invalid file name given as a parameter` (not supported yet)
-    /// - `Invalid call on set_file_name when in an illegal state`
+    /// - `Invalid call on set_file_path when in an illegal state`
     ///
     /// Handling error cases:
     /// ```
-    /// let file_name: &str = "hello.txt";
+    /// let file_path: &str = "hello.txt";
     ///
-    /// match packet_snooper.set_file_name(file_name) {
+    /// match packet_snooper.set_file_path(file_path) {
     ///     Ok(_) => (),
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn set_file_name(&mut self, file_path: &str) -> Result<()>{
+    pub fn set_file_path(&mut self, file_path: &str) -> Result<()>{
         if self.state == State::ConfigFile {
             // TODO check file path is correct
             self.file_path = PathBuf::from(file_path);
             self.state = State::Ready;
             Ok(())
         } else {
-            Err(PSError::new("Invalid call on set_file_name when in an illegal state."))
+            Err(PSError::new("Invalid call on set_file_path when in an illegal state."))
         }
     }
 
@@ -606,7 +606,6 @@ impl PacketSnooper {
 
     fn consume_packets(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
-            // TODO: handle error case better
             let mut report_generator = ReportGenerator::new(file_path, time_interval, stop_thread, stop_thread_cv).expect("Something went wrong");
 
             while let Ok(packet) = rx.recv() {

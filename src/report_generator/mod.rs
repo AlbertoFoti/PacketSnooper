@@ -39,6 +39,12 @@ impl Error for RGError {}
 
 type Result<T> = std::result::Result<T, RGError>;
 
+impl From<std::io::Error> for RGError {
+    fn from(obj: std::io::Error) -> RGError {
+        RGError::new(format!("io::Error : {:?}", obj.to_string()).as_str())
+    }
+}
+
 
 pub enum Format {
     Raw,
@@ -79,18 +85,17 @@ impl InnerReportGenerator {
         }
     }
 
-    pub fn generate_report(&mut self) -> Result<()> {
-        // TODO: handle error cases better
+    pub fn generate_report(&mut self) -> Result<usize> {
         let mut x = OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(true)
-            .open(self.file_path.as_path()).expect("Something went wrong while creating the file for report generation.");
-        x.write(self.data.as_slice()).expect("Something went wrong during the report generation file write.");
+            .open(self.file_path.as_path())?;
+        let char_num = x.write(self.data.as_slice())?;
 
         self.data.clear();
         println!("Printing data into file");
-        Ok(())
+        Ok(char_num)
     }
 }
 

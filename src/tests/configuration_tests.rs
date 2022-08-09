@@ -97,7 +97,7 @@ pub fn packet_snooper_set_file_name_interval_normal_test() {
     let mut ps = PacketSnooper::new();
 
     ps.state = State::ConfigFile; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-    assert!(ps.set_file_name(file_name).is_ok());
+    assert!(ps.set_file_path(file_name).is_ok());
 
     assert_eq!(ps.state, State::Ready);
     assert_eq!(ps.file_path, PathBuf::from(file_name));
@@ -114,14 +114,14 @@ pub fn packet_snooper_set_file_name_in_invalid_state_test() {
 
     for state in invalid_states {
         ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-        let res = ps.set_file_name(file_name);
+        let res = ps.set_file_path(file_name);
         assert!(res.is_err());
         assert_eq!(res.unwrap_err().message, error_str);
     }
 
     for state in valid_states {
         ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-        let res = ps.set_file_name(file_name);
+        let res = ps.set_file_path(file_name);
         assert!(res.is_ok());
     }
 }

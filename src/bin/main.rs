@@ -39,7 +39,7 @@ fn main() {
                 let file_name: Result<String, _> = get_data_from_user();
                 match file_name {
                     Ok(f) => {
-                        match packet_snooper.set_file_name(&f) {
+                        match packet_snooper.set_file_path(&f) {
                             Ok(_) => { continue; },
                             Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                         }
