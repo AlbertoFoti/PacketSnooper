@@ -62,31 +62,39 @@ impl ReportGenerator {
         let end_thread = Arc::new(Mutex::new(false));
         let end_thread2 = end_thread.clone();
 
-        Ok(Self {
+        let mut report_generator = Self {
             file_path,
             time_interval,
-            counting_thread: Option::from(thread::spawn(move || {
-                let mut count = 0;
-                loop {
-                    if *end_thread2.lock().unwrap() == true { return; }
-                    let mut stop_flag = *stop_thread.lock().unwrap();
-                    while stop_flag == true {
-                        stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
-                    }
-
-                    println!("Elapsed time {}", i);
-                    thread::sleep(Duration::from_secs(1));
-                    count += 1;
-                    if i == time_interval {
-                        
-                        count = 0;
-                    }
-                }
-                println!("Ending periodic timer thread");
-            })),
+            counting_thread: None,
             end_thread,
             data: Vec::new(),
-        })
+        };
+
+        report_generator.activate(stop_thread, stop_thread_cv,end_thread2);
+
+        Ok(report_generator)
+    }
+
+    pub fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
+        self.counting_thread = Option::from(thread::spawn(move || {
+            let mut count = 0;
+            loop {
+                if *end_thread.lock().unwrap() == true { return; }
+                let mut stop_flag = *stop_thread.lock().unwrap();
+                while stop_flag == true {
+                    stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
+                }
+
+                println!("Elapsed time {}", count);
+                thread::sleep(Duration::from_secs(1));
+                count += 1;
+                if count == self.time_interval {
+                    self.generate_report();
+                    count = 0;
+                }
+            }
+            println!("Ending periodic timer thread");
+        }))
     }
 
     pub fn push(&mut self, packet: &str) {
@@ -107,7 +115,7 @@ impl ReportGenerator {
         }
     }
 
-    fn generate_report(&mut self) -> Result<()> {
+    pub fn generate_report(&mut self) -> Result<()> {
         // TODO: handle error cases better
         let mut x = OpenOptions::new()
             .write(true)
