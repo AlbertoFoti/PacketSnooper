@@ -6,12 +6,11 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fs::OpenOptions;
-use std::{fs, io};
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::io::{Write};
+use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
-use crate::{EthernetPacket, PacketSnooper};
-use std::time::{Duration, Instant};
+use crate::{EthernetPacket};
+use std::time::{Duration};
 use std::thread;
 use std::thread::JoinHandle;
 
@@ -87,7 +86,7 @@ impl InnerReportGenerator {
             .create(true)
             .truncate(true)
             .open(self.file_path.as_path()).expect("Something went wrong while creating the file for report generation.");
-        let y = x.write(self.data.as_slice()).expect("Something went wrong during the report generation file write.");
+        x.write(self.data.as_slice()).expect("Something went wrong during the report generation file write.");
 
         self.data.clear();
         println!("Printing data into file");
@@ -120,7 +119,7 @@ impl ReportGenerator {
     }
 
     pub fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
-        let mut clone_inner_report_generator = self.inner_struct.clone();
+        let clone_inner_report_generator = self.inner_struct.clone();
         self.counting_thread = Option::from(thread::spawn(move || {
             let mut count = 0;
             loop {
@@ -133,11 +132,10 @@ impl ReportGenerator {
                 thread::sleep(Duration::from_secs(1));
                 count += 1;
                 if count == clone_inner_report_generator.lock().unwrap().time_interval && *end_thread.lock().unwrap() != true && *stop_thread.lock().unwrap() != true {
-                    clone_inner_report_generator.lock().unwrap().generate_report();
+                    clone_inner_report_generator.lock().unwrap().generate_report().unwrap();
                     count = 0;
                 }
             }
-            println!("Ending periodic timer thread");
         }))
     }
 
@@ -150,7 +148,14 @@ impl ReportGenerator {
 impl Drop for ReportGenerator {
     fn drop(&mut self) {
         *self.end_thread.lock().unwrap() = true;
-        self.counting_thread.take().map(JoinHandle::join).unwrap();
-        println!("Dropping Report Generator");
+        match self.counting_thread.take() {
+            Some(res) => {
+                match res.join() {
+                    Ok(_) => (),
+                    Err(_) => (),
+                }
+            },
+            None => (),
+        };
     }
 }

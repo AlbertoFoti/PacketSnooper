@@ -162,7 +162,7 @@ pub fn packet_snooper_end_in_invalid_state_test() {
 pub fn packet_snooper_abort_normal_test() {
     let mut ps = complete_setup();
     ps.start().unwrap();
-    ps.abort();
+    ps.abort().unwrap();
 
     assert_eq!(ps.state, State::ConfigDevice);
     assert!(ps.network_capture_thread.is_none());
@@ -174,7 +174,7 @@ pub fn packet_snooper_abort_normal_test() {
     let mut ps = complete_setup();
     ps.start().unwrap();
     ps.stop().unwrap();
-    ps.abort();
+    ps.abort().unwrap();
 
     assert_eq!(ps.state, State::ConfigDevice);
     assert!(ps.network_capture_thread.is_none());
@@ -193,7 +193,7 @@ pub fn packet_snooper_abort_in_config_state_test() {
     assert_eq!(*ps.end_thread.lock().unwrap(), false);
     assert_eq!(*ps.stop_thread.lock().unwrap(), false);
 
-    ps.abort();
+    ps.abort().unwrap();
 
     assert_eq!(ps.state, State::ConfigDevice);
     assert!(ps.network_capture_thread.is_none());
@@ -214,7 +214,7 @@ pub fn packet_snooper_abort_in_invalid_state_test() {
 
     for state in valid_states {
         ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
-        ps.abort();
+        ps.abort().unwrap();
         assert_eq!(ps.state, State::ConfigDevice);
     }
 }

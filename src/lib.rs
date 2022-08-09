@@ -92,16 +92,14 @@
 // TODO : MacOS as a github action workflow for CI/CD
 
 // Major tasks
-// TODO : timer for report generation implemented (Samuele)
-// TODO : file report generation (Alberto)
+// TODO : expanding state machine to allow multiple kinds of report type
 
 // Advanced (optional)
 // TODO : filters   (???)
-// TODO : --verbose report type (Alberto)
 // TODO : expanding the collection of protocols supported
 
 // Fixes:
-// TODO : Abort on End state creates an error
+// TODO : Abort on End state creates an error (maybe solved)
 
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
@@ -123,7 +121,7 @@ use std::fmt::{Display, Formatter};
 use pcap::{Capture, Device, Packet};
 use std::{thread};
 use std::error::Error;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
@@ -250,10 +248,10 @@ impl PacketSnooper {
     ///             time_interval,
     ///             file_name).expect("Something went wrong.");
     /// ```
-    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_name: &str) -> Result<PacketSnooper> {
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
-        self.set_file_name(file_name)?;
+        self.set_file_name(file_path)?;
         Ok(self)
     }
 
@@ -400,9 +398,6 @@ impl PacketSnooper {
 
         *self.stop_thread.lock().unwrap() = false;
         *self.end_thread.lock().unwrap() = false;
-        let stop_thread = self.stop_thread.clone();
-        let stop_thread_cv = self.stop_thread_cv.clone();
-        let end_thread = self.end_thread.clone();
 
         let ( tx, rx ) = channel();
 
@@ -550,13 +545,23 @@ impl PacketSnooper {
         *self.stop_thread.lock().unwrap() = false;
         self.stop_thread_cv.notify_all();
 
-        match self.network_capture_thread.take().map(JoinHandle::join).unwrap() {
-            Ok(_) => (),
-            Err(_) => { return Err(PSError::new("Something went wrong inside the analyzer thread. Err returned as a result of join."))}
+        match self.network_capture_thread.take() {
+            Some(res) => {
+                match res.join() {
+                    Ok(_) => (),
+                    Err(_) => { return Err(PSError::new("Something went wrong inside the analyzer thread. Err returned as a result of join."))}
+                }
+            },
+            None => (),
         };
-        match self.consumer_thread.take().map(JoinHandle::join).unwrap() {
-            Ok(_) => (),
-            Err(_) => { return Err(PSError::new("Something went wrong inside the consumer thread. Err returned as a result of join."))}
+        match self.consumer_thread.take() {
+            Some(res) => {
+                match res.join() {
+                    Ok(_) => (),
+                    Err(_) => { return Err(PSError::new("Something went wrong inside the consumer thread. Err returned as a result of join."))}
+                }
+            },
+            None => (),
         };
 
         self.state = State::ConfigDevice;

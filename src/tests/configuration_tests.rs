@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::time::Duration;
 use pcap::Device;
 use crate::{PacketSnooper, State};
@@ -99,7 +100,7 @@ pub fn packet_snooper_set_file_name_interval_normal_test() {
     assert!(ps.set_file_name(file_name).is_ok());
 
     assert_eq!(ps.state, State::Ready);
-    assert_eq!(ps.file_name, file_name);
+    assert_eq!(ps.file_path, PathBuf::from(file_name));
 }
 
 #[test]
