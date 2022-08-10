@@ -123,7 +123,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
-use crate::report_generator::{ReportGenerator};
+use crate::report_generator::{ReportFormat, ReportGenerator};
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -208,7 +208,7 @@ pub struct PacketSnooper {
     /// File Path (as target of report generation)
     pub file_path: PathBuf,
     /// Report Format
-    pub report_format: String,
+    pub report_format: ReportFormat,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -229,7 +229,7 @@ impl PacketSnooper {
             current_interface: String::from(Device::lookup().unwrap().name),
             time_interval: Duration::from_secs(60),
             file_path: PathBuf::from("output.txt"),
-            report_format: String::new(),
+            report_format: ReportFormat::Quiet,
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -386,7 +386,7 @@ impl PacketSnooper {
     ///
     /// # Error
     ///
-    /// - `Invalid format name given as a parameter automatically gives 'verbose' format`
+    /// - `Invalid format name given as a parameter`
     /// - `Invalid call on set_report_format when in an illegal state`
     ///
     /// Handling error cases:
@@ -400,10 +400,13 @@ impl PacketSnooper {
     /// ```
     pub fn set_report_format(&mut self, report_format: &str) -> Result<()>{
         if self.state == State::ReportFormat {
-            if report_format == "raw" || report_format == "verbose" || report_format == "quiet" {
-                self.report_format = report_format.to_string();
-            }else {
-                self.report_format = "verbose".to_lowercase();
+            match report_format {
+                "raw" => { self.report_format = ReportFormat::Raw },
+                "quiet" => { self.report_format = ReportFormat::Quiet },
+                "verbose" => { self.report_format = ReportFormat::Verbose }
+                _ => {
+                    return Err(PSError::new("Invalid format name given as a parameter"))
+                }
             }
             self.state = State::Ready;
             Ok(())
@@ -453,6 +456,7 @@ impl PacketSnooper {
         self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(
             self.file_path.clone(),
             self.time_interval.as_secs(),
+            self.report_format.clone(),
             self.stop_thread.clone(),
             self.stop_thread_cv.clone(),
             Box::new(rx))));
@@ -651,9 +655,9 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
-            let mut report_generator = ReportGenerator::new(file_path, time_interval, stop_thread, stop_thread_cv).expect("Something went wrong");
+            let mut report_generator = ReportGenerator::new(file_path, time_interval, report_format, stop_thread, stop_thread_cv).expect("Something went wrong");
 
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);

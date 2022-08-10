@@ -45,8 +45,8 @@ impl From<std::io::Error> for RGError {
     }
 }
 
-
-pub enum Format {
+#[derive(Debug, Clone, PartialEq)]
+pub enum ReportFormat {
     Raw,
     Verbose,
     Quiet,
@@ -55,33 +55,35 @@ pub enum Format {
 pub struct InnerReportGenerator {
     file_path: PathBuf,
     time_interval: u64,
+    report_format: ReportFormat,
     data: Vec<u8>,
 }
 
 impl InnerReportGenerator {
-    pub fn new(file_path: PathBuf, time_interval: u64) -> Result<Self> {
+    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat) -> Result<Self> {
         Ok(Self {
             file_path,
             time_interval,
+            report_format,
             data: Vec::new(),
         })
     }
 
     pub fn push(&mut self, packet: &str) {
-        let dump_packet = self.format_packet(Format::Verbose, packet);
+        let dump_packet = self.format_packet(self.report_format.clone(), packet);
 
         self.data.append(&mut Vec::from("\n----------------\n"));
         self.data.append(&mut Vec::from(dump_packet));
     }
 
-    fn format_packet(&self, format: Format, packet: &str) -> Vec<u8> {
+    fn format_packet(&self, format: ReportFormat, packet: &str) -> Vec<u8> {
         match format {
-            Format::Raw => { Vec::from(packet) },
-            Format::Verbose => {
+            ReportFormat::Raw => { Vec::from(packet) },
+            ReportFormat::Verbose => {
                 let ether_packet = EthernetPacket::from_json(&packet).unwrap();
                 Vec::from(format!("{}", ether_packet).to_string().as_str())
             },
-            Format::Quiet => { Vec::new() },
+            ReportFormat::Quiet => { Vec::new() },
         }
     }
 
@@ -106,11 +108,11 @@ pub struct ReportGenerator {
 }
 
 impl ReportGenerator {
-    pub fn new(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<ReportGenerator> {
+    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat , stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<ReportGenerator> {
         let end_thread = Arc::new(Mutex::new(false));
         let end_thread2 = end_thread.clone();
 
-        let inner_struct = Arc::new(Mutex::new(InnerReportGenerator::new(file_path, time_interval).unwrap()));
+        let inner_struct = Arc::new(Mutex::new(InnerReportGenerator::new(file_path, time_interval, report_format).unwrap()));
 
         let mut report_generator = Self {
             inner_struct,
