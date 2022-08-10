@@ -159,6 +159,8 @@ pub enum State {
     ConfigTimeInterval,
     /// Filename Configuration Stage: Insert the name of the target file (for report generation).
     ConfigFile,
+    /// Format of the report Stage: Decide how packets will be shown (raw,verbose,quit)
+    ReportFormat,
     /// Ready for network traffic analysis.
     Ready,
     /// Analyzing network traffic.
@@ -205,6 +207,8 @@ pub struct PacketSnooper {
     pub time_interval: Duration,
     /// File Path (as target of report generation)
     pub file_path: PathBuf,
+    /// Report Format
+    pub report_format: String,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -225,6 +229,7 @@ impl PacketSnooper {
             current_interface: String::from(Device::lookup().unwrap().name),
             time_interval: Duration::from_secs(60),
             file_path: PathBuf::from("output.txt"),
+            report_format: String::new(),
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -326,9 +331,6 @@ impl PacketSnooper {
     /// Set *`file path`* (as report generation target) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
-    /// Transitions from ConfigFile state to Ready state.
-    /// PacketSnooper is now configured and ready to analyze network traffic
-    ///
     /// # Examples
     ///
     /// Simplified call (without error handling)
@@ -358,10 +360,55 @@ impl PacketSnooper {
         if self.state == State::ConfigFile {
             // TODO check file path is correct
             self.file_path = PathBuf::from(file_path);
-            self.state = State::Ready;
+            self.state = State::ReportFormat;
             Ok(())
         } else {
             Err(PSError::new("Invalid call on set_file_path when in an illegal state."))
+        }
+    }
+
+    /// Set *`report_format`* (as format of the packets in the report) inside PacketSnooper struct.
+    /// It's part of the configuration phase.
+    ///
+    /// Transitions from ConfigFile state to Ready state.
+    /// PacketSnooper is now configured and ready to analyze network traffic
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// let report_format: &str = "verbose";
+    /// packet_snooper.set_report_format(report_format).unwrap();
+    /// ```
+    /// ```
+    /// packet_snooper.set_report_format("verbose").unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid format name given as a parameter automatically gives 'verbose' format`
+    /// - `Invalid call on set_report_format when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// let report_format: &str = "verbose";
+    ///
+    /// match packet_snooper.set_report_format(report_format) {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn set_report_format(&mut self, report_format: &str) -> Result<()>{
+        if self.state == State::ReportFormat {
+            if report_format == "raw" || report_format == "verbose" || report_format == "quiet" {
+                self.report_format = report_format.to_string();
+            }else {
+                self.report_format = "verbose".to_lowercase();
+            }
+            self.state = State::Ready;
+            Ok(())
+        } else {
+            Err(PSError::new("Invalid call on set_report_format when in an illegal state."))
         }
     }
 
