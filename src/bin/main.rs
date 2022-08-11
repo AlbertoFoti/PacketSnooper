@@ -62,11 +62,11 @@ fn main() {
             }
             State::PacketFilter => {
                 print_packet_filter_menu();
-                let format_report = get_data_from_user();
-                match format_report {
+                let packet_filters = get_data_from_user();
+                match packet_filters {
                     Ok(f) => {
-                        match packet_snooper.set_report_format(&f) {
-                            Ok(_) => { continue; },
+                        match packet_snooper.set_packet_filter(&f) {
+                            Ok(_) => { continue },
                             Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                         }
                     },
@@ -199,7 +199,8 @@ fn print_packet_filter_menu() {
     println!("Packet filters selection");
     println!("------------------------");
     println!("Insert the filters that packets must satisfy :");
-    println!("(Filters accepted: IP address / port address / layer3 protocol/ layer4 protocols) :");
+    println!("(Filters accepted: IP address / port address / layer3 protocol / layer4 protocols / upper layer service) ");
+    println!("(separate each filter keyword with a space) : ");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }

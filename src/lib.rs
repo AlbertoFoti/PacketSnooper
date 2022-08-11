@@ -13,12 +13,14 @@
 //! let time_interval: u64 = 60;
 //! let file_path: &str = "hello.txt";
 //! let report_format: &str = "report";
+//! let packet_filter: &str = "TCP";
 //!
 //! let mut packet_snooper = PacketSnooper::new().with_details(
 //!             interface_name,
 //!             time_interval,
 //!             file_path,
-//!             report_format).expect("Something went wrong.");  // It's now in state State::Ready
+//!             report_format,
+//!             packet_filter).expect("Something went wrong.");  // It's now in state State::Ready
 //!
 //! // possible operations
 //! packet_snooper.start().unwrap();
@@ -64,6 +66,13 @@
 //!                Err(e) => { println!("{}", e); },
 //!            }
 //!        },
+//!        State::PacketFilter => {
+//!            ...
+//!            match packet_snooper.set_packet_filter(packet_filter) {
+//!                Ok(_) => { continue; },
+//!                Err(e) => { println!("{}", e); },
+//!            }
+//!        },
 //!        State::Ready => {
 //!            ...
 //!            match cmd {
@@ -99,13 +108,9 @@
 
 // URGENT
 // TODO : fix state machine tests
-// TODO : RELEASE
 
 // Easy tasks
 // TODO : MacOS as a github action workflow for CI/CD
-
-// Major tasks
-// TODO : expanding state machine to allow filters (Samuele)
 
 // Advanced (optional)
 // TODO : expanding the collection of protocols supported
@@ -134,7 +139,6 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
-//use serde_json::Value::String;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 use crate::report_generator::{ReportFormat, ReportGenerator};
 
@@ -207,17 +211,23 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
+/// match packet_snooper.set_packet_filters("report") {
+///     Ok(_) => (),
+///     Err(_) => (),
+/// }
 /// ```
 /// ```
 /// let interface_name: &str = "eth0";
 /// let time_interval: u64 = 75;
 /// let file_path: &str = "dump.txt";
 /// let report_format: &str = "report";
+/// let packet_filters: &str = "TCP";
 /// let mut packet_snooper = PacketSnooper::new().with_details(
 ///             interface_name,
 ///             time_interval,
 ///             file_path
-///             report_format).expect("Something went wrong.");
+///             report_format,
+///             packet_filters).expect("Something went wrong.");
 /// ```
 pub struct PacketSnooper {
     /// Internal state (for configuration and management of operations purposes)
@@ -397,8 +407,7 @@ impl PacketSnooper {
     /// Set *`report_format`* (as format of the packets in the report) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
-    /// Transitions from ConfigFormat state to Ready state.
-    /// PacketSnooper is now configured and ready to analyze network traffic
+    /// Transitions from ConfigFormat state to PacketFilter state.
     ///
     /// # Examples
     ///
@@ -442,10 +451,10 @@ impl PacketSnooper {
         }
     }
 
-    /// Set *`packet_filter`* (as selection of the packets in the report due to some specific) inside PacketSnooper struct.
+    /// Set *`packet_filter`* (as selection of the packets in the report) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
-    /// Transitions from ConfigFormat state to Ready state.
+    /// Transitions from PacketFilter state to Ready state.
     /// PacketSnooper is now configured and ready to analyze network traffic
     ///
     /// # Examples
@@ -475,7 +484,7 @@ impl PacketSnooper {
     /// ```
     pub fn set_packet_filter(&mut self, packet_filter: &str) -> Result<()>{
         if self.state == State::PacketFilter {
-            //TODO: instdea of to_string make a match basing on what the user will write
+            //TODO: instead of to_string make a match basing on what the user will write
             self.packet_filter = packet_filter.to_string();
             self.state = State::Ready;
             Ok(())

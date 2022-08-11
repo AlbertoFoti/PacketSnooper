@@ -139,13 +139,7 @@ impl InnerReportGenerator {
                             timestamp_init: rg_info.timestamp_recv,
                             timestamp_final: rg_info.timestamp_recv };
 
-
-                        // TODO : filtering (TCP HTTPS 5000)
-                        // TODO : all words in filter are in key
-                        // TODO:   if apply_filter() { .... } else { return; }
-                        let filtri= self.packet_filter.clone();
-                        let c = EthernetPacket::from_json(&packet).unwrap().report_data().unwrap();
-                        if self.apply_filter(EthernetPacket::from_json(&packet).unwrap().report_data().unwrap()) {
+                        if self.apply_filter(&key) {
                             let entry = self.data_format.entry(key).or_insert(value);
                             entry.num_bytes += rg_info.num_bytes;
                             entry.timestamp_final = rg_info.timestamp_recv;
@@ -209,19 +203,17 @@ impl InnerReportGenerator {
         ))
     }
 
-    fn apply_filter(&self, re_info: ReportDataInfo) -> bool {
-        let mut filtri = self.packet_filter.split_whitespace();
-        let ip_address = filtri.next().unwrap();
-        if ip_address != re_info.ip_src && ip_address != re_info.ip_dst && ip_address != "no req" {
-            return false;
-        }
-        let port_address = filtri.next().unwrap();
-        if port_address.parse::<u16>().unwrap() != re_info.port_src && port_address.parse::<u16>().unwrap() != re_info.port_dst && port_address != "no req" {
-            return false;
-        }
-        let protocol_l4 = filtri.next().unwrap();
-        if protocol_l4 != re_info.l4_protocol && protocol_l4 != "no req" {
-            return false;
+    fn apply_filter(&self, key: &str) -> bool {
+        for filter in self.packet_filter.split_whitespace() {
+            let mut found = false;
+            for elem in key.split_whitespace() {
+                if filter == elem {
+                    found = true;
+                }
+            }
+            if !found {
+                return false;
+            }
         }
         true
     }
@@ -229,7 +221,7 @@ impl InnerReportGenerator {
 
 pub struct ReportGenerator {
     inner_struct: Arc<Mutex<InnerReportGenerator>>,
-    counting_thread: Option<JoinHandle<()>>,
+    timer_thread: Option<JoinHandle<()>>,
     end_thread: Arc<Mutex<bool>>,
 }
 
@@ -242,7 +234,7 @@ impl ReportGenerator {
 
         let mut report_generator = Self {
             inner_struct,
-            counting_thread: None,
+            timer_thread: None,
             end_thread
         };
 
@@ -255,7 +247,7 @@ impl ReportGenerator {
         let clone_inner_report_generator = self.inner_struct.clone();
         let time_interval = clone_inner_report_generator.lock().unwrap().time_interval;
 
-        self.counting_thread = Option::from(thread::spawn(move || {
+        self.timer_thread = Option::from(thread::spawn(move || {
             let mut count = 0;
             loop {
                 if *end_thread.lock().unwrap() == true { return; }
@@ -283,7 +275,7 @@ impl ReportGenerator {
 impl Drop for ReportGenerator {
     fn drop(&mut self) {
         *self.end_thread.lock().unwrap() = true;
-        match self.counting_thread.take() {
+        match self.timer_thread.take() {
             Some(res) => {
                 match res.join() {
                     Ok(_) => (),
