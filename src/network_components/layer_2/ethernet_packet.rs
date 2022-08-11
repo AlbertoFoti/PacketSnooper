@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use crate::network_components::layer_2::mac_address::MacAddress;
-use crate::network_components::layer_3::ipv4_packet::IPv4Packet;
-use crate::network_components::layer_3::ipv6_packet::IPv6Packet;
+use crate::network_components::layer_3::ipv4_packet::{IPv4Packet, Ipv4ProtocolType};
+use crate::network_components::layer_3::ipv6_packet::{Ipv6NextHeader, IPv6Packet};
 use serde::{Serialize, Deserialize};
 use crate::report_generator::{DisplayAs, ReportDataInfo};
 use crate::ReportFormat;
@@ -45,8 +45,10 @@ impl EthernetPacket {
     }
 
     pub fn report_data(&self) -> Option<ReportDataInfo> {
-        let ip_src;
-        let ip_dst;
+        #[allow(unused_assignments)]
+        let mut ip_src = String::new();
+        #[allow(unused_assignments)]
+        let mut ip_dst = String::new();
         #[allow(unused_assignments)]
         let mut port_src = 0;
         #[allow(unused_assignments)]
@@ -60,28 +62,38 @@ impl EthernetPacket {
                 let ipv4_packet = IPv4Packet::new(&self.payload);
                 ip_src = ipv4_packet.ip_addr_src.to_string();
                 ip_dst = ipv4_packet.ip_addr_dst.to_string();
-                (port_src, port_dst) = self.ports(&ipv4_packet.payload);
-                l4_protocol = self.l4_protocol(&ipv4_packet.payload);
-                upper_service = self.upper_layer_service(&ipv4_packet.payload);
+
+                (port_src, port_dst) = self.ports(&ipv4_packet.payload).unwrap();
+
+                l4_protocol = self.l4_protocol(&self.payload);
+                if l4_protocol.is_none() { return None; }
+
+                upper_service = self.upper_layer_service(&self.payload);
+                if upper_service.is_none() { return None; }
             },
             Some(EtherType::IPV6) => {
                 let ipv6_packet = IPv6Packet::new(self.payload.as_slice());
                 ip_src = ipv6_packet.ip_addr_src.to_string();
                 ip_dst = ipv6_packet.ip_addr_src.to_string();
-                (port_src, port_dst) = self.ports(&ipv6_packet.payload);
-                l4_protocol = self.l4_protocol(&ipv6_packet.payload);
-                upper_service = self.upper_layer_service(&ipv6_packet.payload);
+
+                (port_src, port_dst) = self.ports(&ipv6_packet.payload).unwrap();
+
+                l4_protocol = self.l4_protocol(&self.payload);
+                if l4_protocol.is_none() { return None; }
+
+                upper_service = self.upper_layer_service(&self.payload);
+                if upper_service.is_none() { return None; }
             },
             Some(EtherType::ARP) => { return None; },
             _ => { return None; }
         };
 
-        Option::from(
+        Some(
             ReportDataInfo {
                 ip_src, ip_dst,
                 port_src, port_dst,
-                l4_protocol,
-                upper_service,
+                l4_protocol: l4_protocol.unwrap(),
+                upper_service: upper_service.unwrap(),
                 num_bytes: self.size,
                 timestamp_recv: self.timestamp_recv,
             } )
@@ -102,19 +114,48 @@ impl EthernetPacket {
         }
     }
 
-    fn ports(&self, payload_in_u8: &[u8] ) -> (u16, u16) {
+    fn ports(&self, payload_in_u8: &[u8] ) -> Option<(u16, u16)> {
 
-        (1000 as u16, 1000 as u16)
+        Some((1000 as u16, 1000 as u16))
     }
 
-    fn l4_protocol(&self, payload_in_u8: &[u8] ) -> String {
-
-        "TCP".to_string()
+    fn l4_protocol(&self, payload_in_u8: &[u8] ) -> Option<String> {
+        match self.ether_type.unwrap() {
+            EtherType::IPV4 => {
+                let ipv4_packet = IPv4Packet::new(&payload_in_u8);
+                match ipv4_packet.protocol_type {
+                    Some(Ipv4ProtocolType::TCP) => { Some("TCP".to_string()) },
+                    Some(Ipv4ProtocolType::UDP) => { Some("UDP".to_string()) }
+                    _ => { None }
+                }
+            },
+            EtherType::IPV6 => {
+                let ipv6_packet = IPv6Packet::new(&payload_in_u8);
+                match ipv6_packet.next_header.unwrap() {
+                    Ipv6NextHeader::TCP => { Some("TCP".to_string()) },
+                    Ipv6NextHeader::UDP => { Some("UDP".to_string()) }
+                    Ipv6NextHeader::IPv6HopByHopOption => {
+                        match ipv6_packet.payload.get(0) {
+                            Some(x) => {
+                                let next_header = IPv6Packet::to_protocol_type(*x);
+                                match next_header {
+                                    Some(Ipv6NextHeader::UDP) => { Some("UDP".to_string()) },
+                                    Some(Ipv6NextHeader::TCP) => { Some("TCP".to_string()) },
+                                    _ => { None }
+                                }
+                            }, None => { None }
+                        }
+                    }
+                    _ => { None }
+                }
+            },
+            _ => { None }
+        }
     }
 
-    fn upper_layer_service(&self, payload_in_u8: &[u8] ) -> String {
+    fn upper_layer_service(&self, payload_in_u8: &[u8] ) -> Option<String> {
 
-        "HTTPS".to_string()
+        Some("HTTPS".to_string())
     }
 }
 

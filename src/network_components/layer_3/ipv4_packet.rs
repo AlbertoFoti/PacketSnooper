@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 use std::net::{Ipv4Addr};
 use crate::network_components::layer_4::tcp_packet::TcpPacket;
 use crate::network_components::layer_4::upd_packet::UdpPacket;
+use crate::utility;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Ipv4ProtocolType {
@@ -73,7 +74,7 @@ impl IPv4Packet {
             17 => return Some(Ipv4ProtocolType::UDP),
             x => {
                 return {
-                    println!("no info on this protocol: {:?}", x);
+                    //println!("no info on this protocol: {:?}", x);
                     None
                 };
             }
@@ -97,6 +98,8 @@ impl Display for IPv4Packet {
             self.ttl,
             self.header_checksum,
         ).unwrap();
+
+        write!(f, " > [{}]\n", utility::to_compact_hex(&self.options)).unwrap();
 
         match self.protocol_type {
             Some(Ipv4ProtocolType::ICMPv4) => {

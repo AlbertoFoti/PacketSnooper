@@ -190,9 +190,14 @@ impl InnerReportGenerator {
     }
 
     fn key_gen(&self, re_info: ReportDataInfo) -> String {
-        String::from(format!("{} {}",
+        String::from(format!("{} {} {} {} {} {}",
             re_info.ip_src,
-            re_info.ip_dst))
+            re_info.ip_dst,
+            re_info.port_src,
+            re_info.port_dst,
+            re_info.l4_protocol,
+            re_info.upper_service,
+        ))
     }
 }
 
