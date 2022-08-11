@@ -63,7 +63,7 @@ impl EthernetPacket {
                 ip_src = ipv4_packet.ip_addr_src.to_string();
                 ip_dst = ipv4_packet.ip_addr_dst.to_string();
 
-                (port_src, port_dst) = self.ports(&ipv4_packet.payload).unwrap();
+                (port_src, port_dst) = self.ports(&ipv4_packet.payload);
 
                 l4_protocol = self.l4_protocol(&self.payload);
                 if l4_protocol.is_none() { return None; }
@@ -76,7 +76,7 @@ impl EthernetPacket {
                 ip_src = ipv6_packet.ip_addr_src.to_string();
                 ip_dst = ipv6_packet.ip_addr_src.to_string();
 
-                (port_src, port_dst) = self.ports(&ipv6_packet.payload).unwrap();
+                (port_src, port_dst) = self.ports(&ipv6_packet.payload);
 
                 l4_protocol = self.l4_protocol(&self.payload);
                 if l4_protocol.is_none() { return None; }
@@ -114,9 +114,10 @@ impl EthernetPacket {
         }
     }
 
-    fn ports(&self, payload_in_u8: &[u8] ) -> Option<(u16, u16)> {
-
-        Some((1000 as u16, 1000 as u16))
+    fn ports(&self, payload_in_u8: &[u8] ) -> (u16, u16) {
+        let src_port = u16::from_be_bytes((&payload_in_u8[0..2]).try_into().unwrap());
+        let dst_port = u16::from_be_bytes((&payload_in_u8[2..4]).try_into().unwrap());
+        (src_port,dst_port)
     }
 
     fn l4_protocol(&self, payload_in_u8: &[u8] ) -> Option<String> {
