@@ -370,7 +370,7 @@ impl PacketSnooper {
     /// Set *`report_format`* (as format of the packets in the report) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
-    /// Transitions from ConfigFile state to Ready state.
+    /// Transitions from ConfigFormat state to Ready state.
     /// PacketSnooper is now configured and ready to analyze network traffic
     ///
     /// # Examples

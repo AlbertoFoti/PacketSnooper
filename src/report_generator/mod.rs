@@ -52,6 +52,11 @@ pub enum ReportFormat {
     Quiet,
 }
 
+
+pub trait DisplayAs {
+    fn display_as(&self, report_format: ReportFormat) -> String;
+}
+
 pub struct InnerReportGenerator {
     file_path: PathBuf,
     time_interval: u64,
@@ -70,21 +75,15 @@ impl InnerReportGenerator {
     }
 
     pub fn push(&mut self, packet: &str) {
-        let dump_packet = self.format_packet(self.report_format.clone(), packet);
+        let mut dump_packet = self.format_packet(packet);
 
-        self.data.append(&mut Vec::from("\n----------------\n"));
-        self.data.append(&mut Vec::from(dump_packet));
+        self.data.append(&mut Vec::from("----------------\n"));
+        self.data.append(&mut dump_packet);
     }
 
-    fn format_packet(&self, format: ReportFormat, packet: &str) -> Vec<u8> {
-        match format {
-            ReportFormat::Raw => { Vec::from(packet) },
-            ReportFormat::Verbose => {
-                let ether_packet = EthernetPacket::from_json(&packet).unwrap();
-                Vec::from(format!("{}", ether_packet).to_string().as_str())
-            },
-            ReportFormat::Quiet => { Vec::new() },
-        }
+    fn format_packet(&self, packet: &str) -> Vec<u8> {
+        let ether_packet = EthernetPacket::from_json(&packet).unwrap();
+        Vec::from(format!("{}", ether_packet.display_as(self.report_format.clone())))
     }
 
     pub fn generate_report(&mut self) -> Result<usize> {

@@ -1,8 +1,9 @@
-use std::fmt::{Display, Formatter};
 use crate::network_components::layer_2::mac_address::MacAddress;
 use crate::network_components::layer_3::ipv4_packet::IPv4Packet;
 use crate::network_components::layer_3::ipv6_packet::IPv6Packet;
 use serde::{Serialize, Deserialize};
+use crate::report_generator::DisplayAs;
+use crate::ReportFormat;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EtherType {
@@ -55,17 +56,31 @@ impl EthernetPacket {
 
 unsafe impl Send for EthernetPacket {}
 
-impl Display for EthernetPacket {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Ethernet ").unwrap();
-        write!(f, ": {} -> {} \n", self.mac_addr_dst, self.mac_addr_src).unwrap();
+impl DisplayAs for EthernetPacket {
+    fn display_as(&self, report_format: ReportFormat) -> String {
+        let mut res = String::new();
 
-        match self.ether_type {
-            Some(EtherType::Ethernet802_3) => { write!(f, "Ethernet 802.3 : Unknown Details") },
-            Some(EtherType::IPV4) => { write!(f, "{}", IPv4Packet::new(self.payload.as_slice())) },
-            Some(EtherType::IPV6) => { write!(f, "{}", IPv6Packet::new(self.payload.as_slice())) },
-            Some(EtherType::ARP) => { write!(f, "ARP      : Unknown Details") },
-            _ => { write!(f, "Other Protocol incapsulated in Ethernet frame (Unknown Protocol)") }
+        match report_format {
+            ReportFormat::Raw => {
+                format!("Printing raw ethernet packet")
+            },
+            ReportFormat::Verbose => {
+                res.push_str("Ethernet ");
+                res.push_str(format!(": {} -> {} \n", self.mac_addr_dst, self.mac_addr_src).as_str());
+
+                match self.ether_type {
+                    Some(EtherType::Ethernet802_3) => { res.push_str("Ethernet 802.3 : Unknown Details") },
+                    Some(EtherType::IPV4) => { res.push_str(format!("{}", IPv4Packet::new(self.payload.as_slice())).as_str()) },
+                    Some(EtherType::IPV6) => { res.push_str(format!("{}", IPv6Packet::new(self.payload.as_slice())).as_str()) },
+                    Some(EtherType::ARP) => { res.push_str( "ARP      : Unknown Details") },
+                    _ => { res.push_str("Other Protocol incapsulated in Ethernet frame (Unknown Protocol)") }
+                };
+                res.push('\n');
+                res
+            },
+            ReportFormat::Quiet => {
+                format!("Printing quiet ethernet packet")
+            },
         }
     }
 }
