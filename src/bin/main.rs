@@ -60,6 +60,19 @@ fn main() {
                     Err(e) => { println!("{}", e); },
                 }
             }
+            State::PacketFilter => {
+                print_packet_filter_menu();
+                let format_report = get_data_from_user();
+                match format_report {
+                    Ok(f) => {
+                        match packet_snooper.set_report_format(&f) {
+                            Ok(_) => { continue; },
+                            Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+                        }
+                    },
+                    Err(e) => { println!("{}", e); },
+                }
+            }
             State::Ready => {
                 print_ready_menu();
                 let command: Result<String, _> = get_data_from_user();
@@ -177,6 +190,16 @@ fn print_report_format_menu() {
     println!("Report format selection");
     println!("------------------------");
     println!("Choose the format of the report (raw/verbose/report) :");
+    print!(">>> ");
+    io::stdout().flush().unwrap();
+}
+
+fn print_packet_filter_menu() {
+    print_main_menu();
+    println!("Packet filters selection");
+    println!("------------------------");
+    println!("Insert the filters that packets must satisfy :");
+    println!("(Filters accepted: IP address / port address / layer3 protocol/ layer4 protocols) :");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }

@@ -134,6 +134,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
+use serde_json::Value::String;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 use crate::report_generator::{ReportFormat, ReportGenerator};
 
@@ -173,6 +174,8 @@ pub enum State {
     ConfigFile,
     /// Format of the report Stage: Decide how packets will be shown (raw,verbose,quit)
     ReportFormat,
+    /// Packet filter Stage: Specify the filters, the packets that satisfy will be shown in the report
+    PacketFilter,
     /// Ready for network traffic analysis.
     Ready,
     /// Analyzing network traffic.
@@ -227,6 +230,8 @@ pub struct PacketSnooper {
     pub file_path: PathBuf,
     /// Report Format
     pub report_format: ReportFormat,
+    /// Packet filter
+    pub packet_filter: String,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -248,6 +253,7 @@ impl PacketSnooper {
             time_interval: Duration::from_secs(60),
             file_path: PathBuf::from("output.txt"),
             report_format: ReportFormat::Report,
+            packet_filter: String::new(),
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -429,6 +435,47 @@ impl PacketSnooper {
                     return Err(PSError::new("Invalid format name given as a parameter"))
                 }
             }
+            self.state = State::PacketFilter;
+            Ok(())
+        } else {
+            Err(PSError::new("Invalid call on set_report_format when in an illegal state."))
+        }
+    }
+
+    /// Set *`packet_filter`* (as selection of the packets in the report due to some specific) inside PacketSnooper struct.
+    /// It's part of the configuration phase.
+    ///
+    /// Transitions from ConfigFormat state to Ready state.
+    /// PacketSnooper is now configured and ready to analyze network traffic
+    ///
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// let packet_filter: &str = "TCP";
+    /// packet_snooper.set_packet_filter(packet_filter).unwrap();
+    /// ```
+    /// ```
+    /// packet_snooper.set_packet_filter("TCP").unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid format name given as a parameter`
+    /// - `Invalid call on set_packet_filter when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// let packet_filter: &str = "TCP";
+    ///
+    /// match packet_snooper.set_packet_filter(packet_filter) {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn set_packet_filter(&mut self, packet_filter: &str) -> Result<()>{
+        if self.state == State::PacketFilter {
+            self.packet_filter = packet_filter.to_string();
             self.state = State::Ready;
             Ok(())
         } else {
