@@ -106,14 +106,8 @@
 //! }
 //! ```
 
-// URGENT
-// TODO : fix state machine tests
-
-// Easy tasks
-// TODO : MacOS as a github action workflow for CI/CD
-
-// Advanced (optional)
-// TODO : expanding the collection of protocols supported
+// Easy stuff
+// TODO : tests for report generator module
 
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
@@ -121,7 +115,8 @@
 // TODO : handling all error cases in a good way (...)
 // TODO : complete documentation and check for correctness (Alberto, Samuele)
 
-extern crate core;
+// Advanced (optional)
+// TODO : expanding the collection of protocols supported
 
 pub mod network_components;
 pub mod report_generator;
