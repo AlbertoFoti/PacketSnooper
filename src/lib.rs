@@ -88,14 +88,17 @@
 //! }
 //! ```
 
+// URGENT
+// TODO : fix state machine tests
+// TODO : RELEASE
+
 // Easy tasks
 // TODO : MacOS as a github action workflow for CI/CD
 
 // Major tasks
-// TODO : expanding state machine to allow multiple kinds of report type
+// TODO : expanding state machine to allow filters (Samuele)
 
 // Advanced (optional)
-// TODO : filters   (???)
 // TODO : expanding the collection of protocols supported
 
 // Future stuff to do

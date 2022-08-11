@@ -137,6 +137,10 @@ impl InnerReportGenerator {
                             timestamp_init: rg_info.timestamp_recv,
                             timestamp_final: rg_info.timestamp_recv };
 
+
+                        // TODO : filtering (TCP HTTPS 5000)
+                        // TODO : all words in filter are in key
+                        // TODO:   if apply_filter() { .... } else { return; }
                         let entry = self.data_format.entry(key).or_insert(value);
                         entry.num_bytes += rg_info.num_bytes;
                         entry.timestamp_final = rg_info.timestamp_recv;
