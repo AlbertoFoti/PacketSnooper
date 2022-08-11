@@ -62,7 +62,18 @@ impl DisplayAs for EthernetPacket {
 
         match report_format {
             ReportFormat::Raw => {
-                format!("Printing raw ethernet packet")
+                res.push_str("Ethernet ");
+                res.push_str( format!("{:?} ", self.ether_type.unwrap()).as_str());
+
+                match self.ether_type {
+                    Some(EtherType::Ethernet802_3) => { res.push_str("Ethernet 802.3 : Unknown Details") },
+                    Some(EtherType::IPV4) => { res.push_str(format!("{:?}", IPv4Packet::new(self.payload.as_slice()).protocol_type.unwrap()).as_str()) },
+                    Some(EtherType::IPV6) => { res.push_str(format!("{:?}", IPv6Packet::new(self.payload.as_slice()).next_header.unwrap()).as_str()) },
+                    Some(EtherType::ARP) => { res.push_str( "ARP      : Unknown Details") },
+                    _ => { res.push_str("Other Protocol incapsulated in Ethernet frame (Unknown Protocol)") }
+                };
+                res.push('\n');
+                res
             },
             ReportFormat::Verbose => {
                 res.push_str("Ethernet ");
