@@ -72,11 +72,8 @@ impl IPv4Packet {
             2 => return Some(Ipv4ProtocolType::IGMP),
             6 => return Some(Ipv4ProtocolType::TCP),
             17 => return Some(Ipv4ProtocolType::UDP),
-            x => {
-                return {
-                    //println!("no info on this protocol: {:?}", x);
-                    None
-                };
+            _ => {
+                return None;
             }
         }
     }

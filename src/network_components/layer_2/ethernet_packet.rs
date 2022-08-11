@@ -69,7 +69,7 @@ impl EthernetPacket {
                 l4_protocol = self.l4_protocol(&self.payload);
                 if l4_protocol.is_none() { return None; }
 
-                upper_service = self.upper_layer_service(&self.payload);
+                upper_service = self.upper_layer_service(&ipv4_packet.payload);
                 if upper_service.is_none() { return None; }
             },
             Some(EtherType::IPV6) => {
@@ -82,7 +82,7 @@ impl EthernetPacket {
                 l4_protocol = self.l4_protocol(&self.payload);
                 if l4_protocol.is_none() { return None; }
 
-                upper_service = self.upper_layer_service(&self.payload);
+                upper_service = self.upper_layer_service(&ipv6_packet.payload);
                 if upper_service.is_none() { return None; }
             },
             Some(EtherType::ARP) => { return None; },

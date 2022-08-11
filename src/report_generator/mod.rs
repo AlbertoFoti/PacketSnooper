@@ -124,7 +124,6 @@ impl InnerReportGenerator {
                 match EthernetPacket::from_json(&packet).unwrap().report_data() {
                     Some(rg_info) => {
                         let key = self.key_gen(rg_info.clone());
-                        //println!("{:?}", key);
 
                         // add to hash map
                         let value = ReportEntry {
