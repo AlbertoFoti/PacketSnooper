@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 use pcap::Device;
-use crate::{PacketSnooper, State};
+use crate::{PacketSnooper, ReportFormat, State};
 
 #[test]
 pub fn packet_snooper_set_device_normal_test() {
@@ -39,7 +39,7 @@ pub fn packet_snooper_set_device_in_invalid_state_test() {
     let error_str = "Invalid call on set_device when in an illegal state.";
     let mut ps = PacketSnooper::new();
 
-    let invalid_states = [State::ConfigTimeInterval, State::ConfigFile, State::Ready, State::Working, State::Stopped];
+    let invalid_states = [State::ConfigTimeInterval, State::ConfigFile, State::ReportFormat, State::Ready, State::Working, State::Stopped];
     let valid_states = [State::ConfigDevice];
 
     for state in invalid_states {
@@ -74,7 +74,7 @@ pub fn packet_snooper_set_time_interval_in_invalid_state_test() {
     let error_str = "Invalid call on set_time_interval when in an illegal state.";
     let mut ps = PacketSnooper::new();
 
-    let invalid_states = [State::ConfigDevice, State::ConfigFile, State::Ready, State::Working, State::Stopped];
+    let invalid_states = [State::ConfigDevice, State::ConfigFile, State::ReportFormat, State::Ready, State::Working, State::Stopped];
     let valid_states = [State::ConfigTimeInterval];
 
     for state in invalid_states {
@@ -109,7 +109,7 @@ pub fn packet_snooper_set_file_path_in_invalid_state_test() {
     let error_str = "Invalid call on set_file_path when in an illegal state.";
     let mut ps = PacketSnooper::new();
 
-    let invalid_states = [State::ConfigDevice, State::ConfigTimeInterval, State::Ready, State::Working, State::Stopped];
+    let invalid_states = [State::ConfigDevice, State::ConfigTimeInterval, State::ReportFormat, State::Ready, State::Working, State::Stopped];
     let valid_states = [State::ConfigFile];
 
     for state in invalid_states {
@@ -125,3 +125,40 @@ pub fn packet_snooper_set_file_path_in_invalid_state_test() {
         assert!(res.is_ok());
     }
 }
+
+#[test]
+pub fn packet_snooper_set_report_format_normal_test() {
+    let format_report = "report";
+    let mut ps = PacketSnooper::new();
+
+    ps.state = State::ReportFormat; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
+    assert!(ps.set_report_format(format_report).is_ok());
+
+    assert_eq!(ps.state, State::Ready);
+    assert_eq!(ps.report_format, ReportFormat::Report);
+}
+
+#[test]
+pub fn packet_snooper_set_report_format_in_invalid_state_test() {
+    let format_report = "report";
+    let error_str = "Invalid call on set_report_format when in an illegal state.";
+    let mut ps = PacketSnooper::new();
+
+    let invalid_states = [State::ConfigDevice, State::ConfigTimeInterval, State::ConfigFile, State::Ready, State::Working, State::Stopped];
+    let valid_states = [State::ReportFormat];
+
+    for state in invalid_states {
+        ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
+        let res = ps.set_report_format(format_report);
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err().message, error_str);
+    }
+
+    for state in valid_states {
+        ps.state = state; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
+        let res = ps.set_report_format(format_report);
+        assert!(res.is_ok());
+    }
+}
+
+

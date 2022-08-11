@@ -51,7 +51,7 @@ future support: ()
       <img src="img/architecture.jpg" width="1000" height="500" />
     </p>
     <p align="center">
-      <img src="img/statemachine.jpg" width="870" height="500" />
+      <img src="img/state_machine.jpg" width="870" height="500" />
     </p>
 </div>
 ![This is an image](img/architecture.jpg)

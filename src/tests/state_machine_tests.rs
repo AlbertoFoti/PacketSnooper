@@ -174,8 +174,11 @@ pub fn packet_snooper_rapid_end_test() {
 #[test]
 pub fn packet_snooper_abort_normal_test() {
     let mut ps = complete_setup();
+    sleep(Duration::from_secs(1));
     ps.start().unwrap();
+    sleep(Duration::from_secs(1));
     ps.abort().unwrap();
+    sleep(Duration::from_secs(1));
 
     assert_eq!(ps.state, State::ConfigDevice);
     assert!(ps.network_capture_thread.is_none());
@@ -186,8 +189,11 @@ pub fn packet_snooper_abort_normal_test() {
     sleep(Duration::from_secs(1));
     let mut ps = complete_setup();
     ps.start().unwrap();
+    sleep(Duration::from_secs(1));
     ps.stop().unwrap();
+    sleep(Duration::from_secs(1));
     ps.abort().unwrap();
+    sleep(Duration::from_secs(1));
 
     assert_eq!(ps.state, State::ConfigDevice);
     assert!(ps.network_capture_thread.is_none());
