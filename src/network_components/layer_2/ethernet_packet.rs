@@ -3,6 +3,7 @@ use crate::network_components::layer_2::mac_address::MacAddress;
 use crate::network_components::layer_3::ipv4_packet::{IPv4Packet, Ipv4ProtocolType};
 use crate::network_components::layer_3::ipv6_packet::{Ipv6NextHeader, IPv6Packet};
 use serde::{Serialize, Deserialize};
+use crate::network_components::services_upper_layers::upper_layer_services::{known_port, UpperLayerService};
 use crate::report_generator::{DisplayAs, ReportDataInfo};
 use crate::ReportFormat;
 
@@ -155,8 +156,13 @@ impl EthernetPacket {
     }
 
     fn upper_layer_service(&self, payload_in_u8: &[u8] ) -> Option<String> {
-
-        Some("HTTPS".to_string())
+        let (port_src, port_dst) = self.ports(payload_in_u8);
+        match UpperLayerService::from(known_port(port_src, port_dst)) {
+            UpperLayerService::UNKNOWN => { None },
+            service => {
+                Some(format!("{:?}", service).to_string())
+            }
+        }
     }
 }
 
