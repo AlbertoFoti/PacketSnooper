@@ -51,20 +51,26 @@ impl EthernetPacket {
         let mut port_src = 0;
         #[allow(unused_assignments)]
         let mut port_dst = 0;
+        let l4_protocol;
+        let upper_service;
 
         match self.ether_type {
             Some(EtherType::Ethernet802_3) => { return None; },
             Some(EtherType::IPV4) => {
-                let ipv4_packet = IPv4Packet::new(self.payload.as_slice());
+                let ipv4_packet = IPv4Packet::new(&self.payload);
                 ip_src = ipv4_packet.ip_addr_src.to_string();
                 ip_dst = ipv4_packet.ip_addr_dst.to_string();
-                (port_src, port_dst) = self.ports(ipv4_packet.payload);
+                (port_src, port_dst) = self.ports(&ipv4_packet.payload);
+                l4_protocol = self.l4_protocol(&ipv4_packet.payload);
+                upper_service = self.upper_layer_service(&ipv4_packet.payload);
             },
             Some(EtherType::IPV6) => {
                 let ipv6_packet = IPv6Packet::new(self.payload.as_slice());
                 ip_src = ipv6_packet.ip_addr_src.to_string();
                 ip_dst = ipv6_packet.ip_addr_src.to_string();
-                (port_src, port_dst) = self.ports(ipv6_packet.payload);
+                (port_src, port_dst) = self.ports(&ipv6_packet.payload);
+                l4_protocol = self.l4_protocol(&ipv6_packet.payload);
+                upper_service = self.upper_layer_service(&ipv6_packet.payload);
             },
             Some(EtherType::ARP) => { return None; },
             _ => { return None; }
@@ -74,8 +80,8 @@ impl EthernetPacket {
             ReportDataInfo {
                 ip_src, ip_dst,
                 port_src, port_dst,
-                //l4_protocol,
-                //upper_service,
+                l4_protocol,
+                upper_service,
                 num_bytes: self.size,
                 timestamp_recv: self.timestamp_recv,
             } )
@@ -96,9 +102,19 @@ impl EthernetPacket {
         }
     }
 
-    fn ports(&self, ipv4_data_in_u8: Vec<u8> ) -> (u16, u16) {
+    fn ports(&self, payload_in_u8: &[u8] ) -> (u16, u16) {
 
         (1000 as u16, 1000 as u16)
+    }
+
+    fn l4_protocol(&self, payload_in_u8: &[u8] ) -> String {
+
+        "TCP".to_string()
+    }
+
+    fn upper_layer_service(&self, payload_in_u8: &[u8] ) -> String {
+
+        "HTTPS".to_string()
     }
 }
 

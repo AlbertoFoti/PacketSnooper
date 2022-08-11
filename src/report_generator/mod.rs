@@ -60,8 +60,8 @@ pub struct ReportDataInfo {
     pub ip_dst: String,
     pub port_src: u16,
     pub port_dst: u16,
-    //pub l4_protocol: String,
-    //pub upper_service: String,
+    pub l4_protocol: String,
+    pub upper_service: String,
     pub num_bytes: usize,
     pub timestamp_recv: DateTime<Utc>,
 }
@@ -72,6 +72,8 @@ pub struct ReportEntry {
     pub ip_dst: String,
     pub port_src: u16,
     pub port_dst: u16,
+    pub l4_protocol: String,
+    pub upper_service: String,
     pub num_bytes: usize,
     pub timestamp_init: DateTime<Utc>,
     pub timestamp_final: DateTime<Utc>,
@@ -79,11 +81,13 @@ pub struct ReportEntry {
 
 impl Display for ReportEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <35} | {6: <35}",
+        write!(f, "{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}",
             self.ip_src,
             self.ip_dst,
             self.port_src,
             self.port_dst,
+            self.l4_protocol,
+            self.upper_service,
             self.num_bytes,
             self.timestamp_init,
             self.timestamp_final)
@@ -128,6 +132,8 @@ impl InnerReportGenerator {
                             ip_dst: rg_info.ip_dst,
                             port_src: rg_info.port_src,
                             port_dst: rg_info.port_dst,
+                            l4_protocol: rg_info.l4_protocol,
+                            upper_service: rg_info.upper_service,
                             num_bytes: rg_info.num_bytes,
                             timestamp_init: rg_info.timestamp_recv,
                             timestamp_final: rg_info.timestamp_recv };
@@ -162,8 +168,8 @@ impl InnerReportGenerator {
 
         match self.report_format {
             ReportFormat::Report => {
-                let mut report = String::from(format!("{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <35} | {6: <35}\n",
-                "IP src", "IP dst", "Port src", "Port dst", "Num. Bytes", "Initial Timestamp", "Final Timestamp").as_str());
+                let mut report = String::from(format!("{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}\n",
+                "IP src", "IP dst", "Port src", "Port dst", "L4 Protocol", "Upper Service", "Num. Bytes", "Initial Timestamp", "Final Timestamp").as_str());
 
                 self.data_format.iter_mut().for_each(|(_, value)| { report.push_str(format!("{}\n", value).as_str())});
 
