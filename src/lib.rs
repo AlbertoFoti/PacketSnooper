@@ -695,6 +695,7 @@ impl PacketSnooper {
         Ok(())
     }
 
+    /// Retrieves device from an interface name
     fn retrieve_device(interface_name: &str) -> Result<Device> {
         for device in Device::list().unwrap() {
             if interface_name == device.name {
@@ -704,6 +705,7 @@ impl PacketSnooper {
         Err(PSError::new("unable to find device with the specified interface name "))
     }
 
+    /// Network Analysis Thread for collecting packets from an interface
     fn network_analysis(interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>, tx: Sender<String>) -> impl FnOnce() -> () {
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
                 .promisc(true)
@@ -713,10 +715,6 @@ impl PacketSnooper {
 
         move || {
             loop {
-                if *end_thread.lock().unwrap() == true {
-                    drop(cap);
-                    break;
-                }
                 let mut stop_flag = *stop_thread.lock().unwrap();
                 while stop_flag == true {
                     stop_flag = *stop_thread_cv.wait(stop_thread.lock().unwrap()).unwrap();
@@ -725,6 +723,10 @@ impl PacketSnooper {
                             .timeout(CAPTURE_BUFFER_TIMEOUT_MS)
                             .open().unwrap()
                             .setnonblock().unwrap();
+                }
+                if *end_thread.lock().unwrap() == true {
+                    drop(cap);
+                    break;
                 }
                 if let Ok(packet) = cap.next() {
                     if *end_thread.lock().unwrap() == false && *stop_thread.lock().unwrap() == false {
@@ -735,6 +737,7 @@ impl PacketSnooper {
         }
     }
 
+    /// Consumer thread. Receives packets from the Analyzer thread and generates a report periodically.
     fn consume_packets(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
             let mut report_generator = ReportGenerator::new(file_path, time_interval, report_format, packet_filter, stop_thread, stop_thread_cv).expect("Something went wrong");
@@ -745,6 +748,7 @@ impl PacketSnooper {
         }
     }
 
+    /// Decode using the TCP/IP stack standard from a packet (vector of bytes)
     fn decode_packet(packet: Packet) -> EthernetPacket {
         let data = packet.data;
         EthernetPacket::new(data)
@@ -767,6 +771,6 @@ impl Display for PacketSnooper {
 
 impl Drop for PacketSnooper {
     fn drop(&mut self) {
-
+        self.abort().unwrap()
     }
 }
