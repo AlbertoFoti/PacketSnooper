@@ -144,7 +144,8 @@ impl InnerReportGenerator {
                         // TODO : all words in filter are in key
                         // TODO:   if apply_filter() { .... } else { return; }
                         let filtri= self.packet_filter.clone();
-                        if key == filtri {
+                        let c = EthernetPacket::from_json(&packet).unwrap().report_data().unwrap();
+                        if self.apply_filter(EthernetPacket::from_json(&packet).unwrap().report_data().unwrap()) {
                             let entry = self.data_format.entry(key).or_insert(value);
                             entry.num_bytes += rg_info.num_bytes;
                             entry.timestamp_final = rg_info.timestamp_recv;
@@ -206,6 +207,23 @@ impl InnerReportGenerator {
             re_info.l4_protocol,
             re_info.upper_service,
         ))
+    }
+
+    fn apply_filter(&self, re_info: ReportDataInfo) -> bool {
+        let mut filtri = self.packet_filter.split_whitespace();
+        let ip_address = filtri.next().unwrap();
+        if ip_address != re_info.ip_src && ip_address != re_info.ip_dst && ip_address != "no req" {
+            return false;
+        }
+        let port_address = filtri.next().unwrap();
+        if port_address.parse::<u16>().unwrap() != re_info.port_src && port_address.parse::<u16>().unwrap() != re_info.port_dst && port_address != "no req" {
+            return false;
+        }
+        let protocol_l4 = filtri.next().unwrap();
+        if protocol_l4 != re_info.l4_protocol && protocol_l4 != "no req" {
+            return false;
+        }
+        true
     }
 }
 
