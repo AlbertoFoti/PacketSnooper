@@ -1,4 +1,4 @@
-use std::time::Instant;
+use chrono::{DateTime, Utc};
 use crate::network_components::layer_2::mac_address::MacAddress;
 use crate::network_components::layer_3::ipv4_packet::IPv4Packet;
 use crate::network_components::layer_3::ipv6_packet::IPv6Packet;
@@ -21,6 +21,7 @@ pub struct EthernetPacket {
     pub ether_type: Option<EtherType>,
     pub payload: Vec<u8>,
     pub size: usize,
+    pub timestamp_recv: DateTime<Utc>,
 }
 
 impl EthernetPacket {
@@ -31,6 +32,7 @@ impl EthernetPacket {
             ether_type: EthernetPacket::to_ether_type(&ether_data_in_u8[12..14]),
             payload: Vec::from(&ether_data_in_u8[14..]),
             size: ether_data_in_u8.len(),
+            timestamp_recv: Utc::now(),
         }
     }
 
@@ -45,6 +47,10 @@ impl EthernetPacket {
     pub fn report_data(&self) -> Option<ReportDataInfo> {
         let ip_src;
         let ip_dst;
+        #[allow(unused_assignments)]
+        let mut port_src = 0;
+        #[allow(unused_assignments)]
+        let mut port_dst = 0;
 
         match self.ether_type {
             Some(EtherType::Ethernet802_3) => { return None; },
@@ -52,11 +58,13 @@ impl EthernetPacket {
                 let ipv4_packet = IPv4Packet::new(self.payload.as_slice());
                 ip_src = ipv4_packet.ip_addr_src.to_string();
                 ip_dst = ipv4_packet.ip_addr_dst.to_string();
+                (port_src, port_dst) = self.ports(ipv4_packet.payload);
             },
             Some(EtherType::IPV6) => {
                 let ipv6_packet = IPv6Packet::new(self.payload.as_slice());
                 ip_src = ipv6_packet.ip_addr_src.to_string();
                 ip_dst = ipv6_packet.ip_addr_src.to_string();
+                (port_src, port_dst) = self.ports(ipv6_packet.payload);
             },
             Some(EtherType::ARP) => { return None; },
             _ => { return None; }
@@ -65,11 +73,11 @@ impl EthernetPacket {
         Option::from(
             ReportDataInfo {
                 ip_src, ip_dst,
-                //port_src, port_dst,
+                port_src, port_dst,
                 //l4_protocol,
                 //upper_service,
                 num_bytes: self.size,
-                timestamp_recv: Instant::now(),
+                timestamp_recv: self.timestamp_recv,
             } )
     }
 
@@ -86,6 +94,11 @@ impl EthernetPacket {
                 }
             }
         }
+    }
+
+    fn ports(&self, ipv4_data_in_u8: Vec<u8> ) -> (u16, u16) {
+
+        (1000 as u16, 1000 as u16)
     }
 }
 

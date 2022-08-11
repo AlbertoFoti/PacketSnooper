@@ -1,20 +1,15 @@
-192.168.1.119 | 66.22.238.14 | ReportEntry { num_bytes: 203509, timestamp_init: Instant { tv_sec: 11989, tv_nsec: 944249080 }, timestamp_final: Instant { tv_sec: 12009, tv_nsec: 908324122 } }
-54.161.151.19 | 192.168.1.119 | ReportEntry { num_bytes: 164, timestamp_init: Instant { tv_sec: 11994, tv_nsec: 956259707 }, timestamp_final: Instant { tv_sec: 11995, tv_nsec: 84039134 } }
-192.168.1.119 | 66.22.238.13 | ReportEntry { num_bytes: 1716, timestamp_init: Instant { tv_sec: 11989, tv_nsec: 976372138 }, timestamp_final: Instant { tv_sec: 12008, tv_nsec: 980310397 } }
-66.22.238.14 | 192.168.1.119 | ReportEntry { num_bytes: 2080, timestamp_init: Instant { tv_sec: 11991, tv_nsec: 4041508 }, timestamp_final: Instant { tv_sec: 12009, tv_nsec: 908229539 } }
-140.82.121.4 | 192.168.1.119 | ReportEntry { num_bytes: 5473, timestamp_init: Instant { tv_sec: 12002, tv_nsec: 900194065 }, timestamp_final: Instant { tv_sec: 12003, tv_nsec: 285375594 } }
-140.82.112.25 | 192.168.1.119 | ReportEntry { num_bytes: 158, timestamp_init: Instant { tv_sec: 11993, tv_nsec: 644068639 }, timestamp_final: Instant { tv_sec: 11993, tv_nsec: 867981817 } }
-66.22.238.13 | 192.168.1.119 | ReportEntry { num_bytes: 5556, timestamp_init: Instant { tv_sec: 11990, tv_nsec: 364070555 }, timestamp_final: Instant { tv_sec: 12009, tv_nsec: 908187150 } }
-162.159.137.234 | 192.168.1.119 | ReportEntry { num_bytes: 1140, timestamp_init: Instant { tv_sec: 11990, tv_nsec: 264155324 }, timestamp_final: Instant { tv_sec: 12002, tv_nsec: 260188336 } }
-34.80.0.147 | 192.168.1.119 | ReportEntry { num_bytes: 54, timestamp_init: Instant { tv_sec: 11990, tv_nsec: 427996913 }, timestamp_final: Instant { tv_sec: 11990, tv_nsec: 427996913 } }
-192.168.1.119 | 149.154.167.99 | ReportEntry { num_bytes: 3018, timestamp_init: Instant { tv_sec: 11991, tv_nsec: 420188263 }, timestamp_final: Instant { tv_sec: 12009, tv_nsec: 428310977 } }
-192.168.1.119 | 54.161.151.19 | ReportEntry { num_bytes: 102, timestamp_init: Instant { tv_sec: 11994, tv_nsec: 956305282 }, timestamp_final: Instant { tv_sec: 11994, tv_nsec: 956305282 } }
-192.168.1.1 | 192.168.1.119 | ReportEntry { num_bytes: 262, timestamp_init: Instant { tv_sec: 12002, tv_nsec: 868487090 }, timestamp_final: Instant { tv_sec: 12002, tv_nsec: 868571209 } }
-192.168.1.119 | 192.168.1.1 | ReportEntry { num_bytes: 162, timestamp_init: Instant { tv_sec: 12002, tv_nsec: 868012590 }, timestamp_final: Instant { tv_sec: 12002, tv_nsec: 868068249 } }
-140.82.121.5 | 192.168.1.119 | ReportEntry { num_bytes: 1246, timestamp_init: Instant { tv_sec: 12002, tv_nsec: 868326164 }, timestamp_final: Instant { tv_sec: 12003, tv_nsec: 28721809 } }
-192.168.1.119 | 34.80.0.147 | ReportEntry { num_bytes: 66, timestamp_init: Instant { tv_sec: 11990, tv_nsec: 136199878 }, timestamp_final: Instant { tv_sec: 11990, tv_nsec: 136199878 } }
-149.154.167.99 | 192.168.1.119 | ReportEntry { num_bytes: 1790, timestamp_init: Instant { tv_sec: 11991, tv_nsec: 452089439 }, timestamp_final: Instant { tv_sec: 12009, tv_nsec: 428277885 } }
-192.168.1.119 | 140.82.121.5 | ReportEntry { num_bytes: 399, timestamp_init: Instant { tv_sec: 12002, tv_nsec: 836235979 }, timestamp_final: Instant { tv_sec: 12003, tv_nsec: 28780818 } }
-192.168.1.119 | 140.82.112.25 | ReportEntry { num_bytes: 96, timestamp_init: Instant { tv_sec: 11993, tv_nsec: 644142958 }, timestamp_final: Instant { tv_sec: 11993, tv_nsec: 644142958 } }
-192.168.1.119 | 140.82.121.4 | ReportEntry { num_bytes: 1553, timestamp_init: Instant { tv_sec: 12002, tv_nsec: 868620774 }, timestamp_final: Instant { tv_sec: 12003, tv_nsec: 285442839 } }
-192.168.1.119 | 162.159.137.234 | ReportEntry { num_bytes: 2562, timestamp_init: Instant { tv_sec: 11990, tv_nsec: 264064263 }, timestamp_final: Instant { tv_sec: 12002, tv_nsec: 260217315 } }
+IP src          | IP dst          | Port src  | Port dst  | Num. Bytes      Initial Timestamp                   | Final Timestamp                    
+149.154.167.99  | 192.168.1.119   | 1000      | 1000      | 2086            | 2022-08-11 12:37:04.755287287 UTC | 2022-08-11 12:37:16.775283255 UTC
+66.22.238.14    | 192.168.1.119   | 1000      | 1000      | 1654            | 2022-08-11 12:37:03.603433027 UTC | 2022-08-11 12:37:17.607165014 UTC
+162.159.137.234 | 192.168.1.119   | 1000      | 1000      | 927             | 2022-08-11 12:37:03.343333435 UTC | 2022-08-11 12:37:17.127171679 UTC
+192.168.1.119   | 54.161.151.19   | 1000      | 1000      | 204             | 2022-08-11 12:37:03.859340423 UTC | 2022-08-11 12:37:03.859340423 UTC
+192.168.1.119   | 34.80.0.147     | 1000      | 1000      | 132             | 2022-08-11 12:37:12.375286783 UTC | 2022-08-11 12:37:12.375286783 UTC
+66.22.238.13    | 192.168.1.119   | 1000      | 1000      | 4154            | 2022-08-11 12:37:03.439358565 UTC | 2022-08-11 12:37:17.447287241 UTC
+192.168.1.119   | 198.252.206.25  | 1000      | 1000      | 132             | 2022-08-11 12:37:10.343118333 UTC | 2022-08-11 12:37:10.343118333 UTC
+34.80.0.147     | 192.168.1.119   | 1000      | 1000      | 132             | 2022-08-11 12:37:12.667165504 UTC | 2022-08-11 12:37:12.667165504 UTC
+198.252.206.25  | 192.168.1.119   | 1000      | 1000      | 132             | 2022-08-11 12:37:10.471118565 UTC | 2022-08-11 12:37:10.471118565 UTC
+192.168.1.119   | 162.159.137.234 | 1000      | 1000      | 1734            | 2022-08-11 12:37:03.343263882 UTC | 2022-08-11 12:37:17.127274040 UTC
+54.161.151.19   | 192.168.1.119   | 1000      | 1000      | 262             | 2022-08-11 12:37:03.859296776 UTC | 2022-08-11 12:37:03.987138308 UTC
+192.168.1.119   | 66.22.238.14    | 1000      | 1000      | 180746          | 2022-08-11 12:37:03.119130566 UTC | 2022-08-11 12:37:18.055270947 UTC
+192.168.1.119   | 66.22.238.13    | 1000      | 1000      | 1410            | 2022-08-11 12:37:03.407343535 UTC | 2022-08-11 12:37:17.831152308 UTC
+192.168.1.119   | 149.154.167.99  | 1000      | 1000      | 2732            | 2022-08-11 12:37:04.723376705 UTC | 2022-08-11 12:37:16.775351925 UTC

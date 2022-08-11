@@ -11,9 +11,10 @@ use std::io::{Write};
 use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use crate::{EthernetPacket};
-use std::time::{Duration, Instant};
+use std::time::{Duration};
 use std::thread;
 use std::thread::JoinHandle;
+use chrono::{DateTime, Utc};
 
 mod tests;
 
@@ -57,19 +58,36 @@ pub enum ReportFormat {
 pub struct ReportDataInfo {
     pub ip_src: String,
     pub ip_dst: String,
-    //pub port_src: u16,
-    //pub port_dst: u16,
+    pub port_src: u16,
+    pub port_dst: u16,
     //pub l4_protocol: String,
     //pub upper_service: String,
     pub num_bytes: usize,
-    pub timestamp_recv: Instant,
+    pub timestamp_recv: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct ReportEntry {
+    pub ip_src: String,
+    pub ip_dst: String,
+    pub port_src: u16,
+    pub port_dst: u16,
     pub num_bytes: usize,
-    pub timestamp_init: Instant,
-    pub timestamp_final: Instant,
+    pub timestamp_init: DateTime<Utc>,
+    pub timestamp_final: DateTime<Utc>,
+}
+
+impl Display for ReportEntry {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <35} | {6: <35}",
+            self.ip_src,
+            self.ip_dst,
+            self.port_src,
+            self.port_dst,
+            self.num_bytes,
+            self.timestamp_init,
+            self.timestamp_final)
+    }
 }
 
 pub trait DisplayAs {
@@ -105,7 +123,15 @@ impl InnerReportGenerator {
                         //println!("{:?}", key);
 
                         // add to hash map
-                        let value = ReportEntry { num_bytes: 0, timestamp_init: rg_info.timestamp_recv, timestamp_final: rg_info.timestamp_recv };
+                        let value = ReportEntry {
+                            ip_src: rg_info.ip_src,
+                            ip_dst: rg_info.ip_dst,
+                            port_src: rg_info.port_src,
+                            port_dst: rg_info.port_dst,
+                            num_bytes: rg_info.num_bytes,
+                            timestamp_init: rg_info.timestamp_recv,
+                            timestamp_final: rg_info.timestamp_recv };
+
                         let entry = self.data_format.entry(key).or_insert(value);
                         entry.num_bytes += rg_info.num_bytes;
                         entry.timestamp_final = rg_info.timestamp_recv;
@@ -136,17 +162,15 @@ impl InnerReportGenerator {
 
         match self.report_format {
             ReportFormat::Report => {
-                let mut x = String::new();
-                for (key, value) in self.data_format.iter_mut() {
-                    let mut s = String::new();
-                    for elem in key.split_whitespace() {
-                        s.push_str(format!("{} | ", elem).as_str());
-                    }
-                    s.push_str(format!("{:?}\n", value).as_str());
-                    x.push_str(s.as_str());
-                }
-                let char_num = file.write(x.as_ref()).unwrap();
+                let mut report = String::from(format!("{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <35} | {6: <35}\n",
+                "IP src", "IP dst", "Port src", "Port dst", "Num. Bytes", "Initial Timestamp", "Final Timestamp").as_str());
+
+                self.data_format.iter_mut().for_each(|(_, value)| { report.push_str(format!("{}\n", value).as_str())});
+
+                let char_num = file.write(report.as_ref()).unwrap();
+
                 self.data_format.clear();
+
                 println!("Printing data for report");
                 Ok(char_num)
             },
