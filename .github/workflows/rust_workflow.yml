@@ -32,8 +32,8 @@ jobs:
         - name: Config
           if: matrix.os == 'macOS-latest'
           run: |
-            sudo brew install cargo
-            sudo brew install libpcap
+            brew install cargo
+            brew install libpcap
         - name: Build
           if: matrix.os == 'macOS-latest'
           run: sudo cargo build --verbose
