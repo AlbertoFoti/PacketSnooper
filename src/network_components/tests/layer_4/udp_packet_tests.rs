@@ -1,6 +1,6 @@
 use crate::network_components::layer_4::upd_packet::UdpPacket;
 use crate::network_components::services_upper_layers::upper_layer_services::UpperLayerService;
-use crate::network_components::tests::{IPV4_DATA_IN_U8, UDP_DATA_IN_U8};
+use crate::network_components::tests::{IPV4_DATA_IN_U8_UDP, UDP_DATA_IN_U8};
 
 fn check_packet(udp_packet: UdpPacket) {
     assert_eq!(udp_packet.src_port, u16::from_be_bytes([131, 149]));
@@ -19,7 +19,7 @@ fn new_udp_packet_from_udp_data() {
 
 #[test]
 fn new_udp_packet_from_ipv4_data() {
-    let udp_packet = UdpPacket::new(&IPV4_DATA_IN_U8[20..]);
+    let udp_packet = UdpPacket::new(&IPV4_DATA_IN_U8_UDP[20..]);
 
     check_packet(udp_packet);
 }

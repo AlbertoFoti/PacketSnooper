@@ -11,12 +11,14 @@
 //! ```
 //! let interface_name: &str = "eth0";
 //! let time_interval: u64 = 60;
-//! let file_name: &str = "hello.txt";
+//! let file_path: &str = "hello.txt";
+//! let report_format: &str = "report";
 //!
 //! let mut packet_snooper = PacketSnooper::new().with_details(
 //!             interface_name,
 //!             time_interval,
-//!             file_name).expect("Something went wrong.");  // It's now in state State::Ready
+//!             file_path,
+//!             report_format).expect("Something went wrong.");  // It's now in state State::Ready
 //!
 //! // possible operations
 //! packet_snooper.start().unwrap();
@@ -50,7 +52,14 @@
 //!        },
 //!        State::ConfigFile => {
 //!            ...
-//!            match packet_snooper.set_file_name(file_name) {
+//!            match packet_snooper.set_file_path(file_path) {
+//!                Ok(_) => { continue; },
+//!                Err(e) => { println!("{}", e); },
+//!            }
+//!        },
+//!        State::ReportFormat => {
+//!            ...
+//!            match packet_snooper.set_report_format(report_format) {
 //!                Ok(_) => { continue; },
 //!                Err(e) => { println!("{}", e); },
 //!            }
@@ -88,23 +97,22 @@
 //! }
 //! ```
 
+// URGENT
+// TODO : fix state machine tests
+// TODO : RELEASE
+
 // Easy tasks
 // TODO : MacOS as a github action workflow for CI/CD
 
 // Major tasks
-// TODO : expanding state machine to allow multiple kinds of report type
+// TODO : expanding state machine to allow filters (Samuele)
 
 // Advanced (optional)
-// TODO : filters   (???)
 // TODO : expanding the collection of protocols supported
-
-// Fixes:
-// TODO : Abort on End state creates an error (maybe solved)
 
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
 // TODO : tests for IPv6 packet  (Alberto)
-// TODO : tests for TCP   (Alberto)
 // TODO : handling all error cases in a good way (...)
 // TODO : complete documentation and check for correctness (Alberto, Samuele)
 
@@ -127,7 +135,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
-use crate::report_generator::{ReportGenerator};
+use crate::report_generator::{ReportFormat, ReportGenerator};
 
 const CAPTURE_BUFFER_TIMEOUT_MS: i32 = 25;
 
@@ -163,6 +171,8 @@ pub enum State {
     ConfigTimeInterval,
     /// Filename Configuration Stage: Insert the name of the target file (for report generation).
     ConfigFile,
+    /// Format of the report Stage: Decide how packets will be shown (raw,verbose,quit)
+    ReportFormat,
     /// Ready for network traffic analysis.
     Ready,
     /// Analyzing network traffic.
@@ -186,7 +196,11 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
-/// match packet_snooper.set_file_name("hello.txt") {
+/// match packet_snooper.set_file_path("hello.txt") {
+///     Ok(_) => (),
+///     Err(_) => (),
+/// }
+/// match packet_snooper.set_report_format("report") {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
@@ -194,11 +208,13 @@ pub enum State {
 /// ```
 /// let interface_name: &str = "eth0";
 /// let time_interval: u64 = 75;
-/// let file_name: &str = "dump.txt";
+/// let file_path: &str = "dump.txt";
+/// let report_format: &str = "report";
 /// let mut packet_snooper = PacketSnooper::new().with_details(
 ///             interface_name,
 ///             time_interval,
-///             file_name).expect("Something went wrong.");
+///             file_path
+///             report_format).expect("Something went wrong.");
 /// ```
 pub struct PacketSnooper {
     /// Internal state (for configuration and management of operations purposes)
@@ -209,6 +225,8 @@ pub struct PacketSnooper {
     pub time_interval: Duration,
     /// File Path (as target of report generation)
     pub file_path: PathBuf,
+    /// Report Format
+    pub report_format: ReportFormat,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -229,6 +247,7 @@ impl PacketSnooper {
             current_interface: String::from(Device::lookup().unwrap().name),
             time_interval: Duration::from_secs(60),
             file_path: PathBuf::from("output.txt"),
+            report_format: ReportFormat::Report,
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -243,15 +262,18 @@ impl PacketSnooper {
     /// let interface_name: &str = "eth0";
     /// let time_interval: u64 = 75;
     /// let file_name: &str = "dump.txt";
+    /// let report_format: &str = "report";
     /// let mut packet_snooper = PacketSnooper::new().with_details(
     ///             interface_name,
     ///             time_interval,
-    ///             file_name).expect("Something went wrong.");
+    ///             file_name,
+    ///             report_format).expect("Something went wrong.");
     /// ```
-    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str) -> Result<PacketSnooper> {
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str, report_format: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
-        self.set_file_name(file_path)?;
+        self.set_file_path(file_path)?;
+        self.set_report_format(report_format)?;
         Ok(self)
     }
 
@@ -327,45 +349,90 @@ impl PacketSnooper {
         }
     }
 
-    /// Set *`file name`* (as report generation target) inside PacketSnooper struct.
+    /// Set *`file path`* (as report generation target) inside PacketSnooper struct.
     /// It's part of the configuration phase.
     ///
-    /// Transitions from ConfigFile state to Ready state.
+    /// # Examples
+    ///
+    /// Simplified call (without error handling)
+    /// ```
+    /// let file_path: &str = "hello.txt";
+    /// packet_snooper.set_file_path(file_path).unwrap();
+    /// ```
+    /// ```
+    /// packet_snooper.set_file_path("hello.txt").unwrap();
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// - `Invalid file name given as a parameter` (not supported yet)
+    /// - `Invalid call on set_file_path when in an illegal state`
+    ///
+    /// Handling error cases:
+    /// ```
+    /// let file_path: &str = "hello.txt";
+    ///
+    /// match packet_snooper.set_file_path(file_path) {
+    ///     Ok(_) => (),
+    ///     Err(e) => { println!("{}", e); },
+    /// }
+    /// ```
+    pub fn set_file_path(&mut self, file_path: &str) -> Result<()>{
+        if self.state == State::ConfigFile {
+            // TODO check file path is correct
+            self.file_path = PathBuf::from(file_path);
+            self.state = State::ReportFormat;
+            Ok(())
+        } else {
+            Err(PSError::new("Invalid call on set_file_path when in an illegal state."))
+        }
+    }
+
+    /// Set *`report_format`* (as format of the packets in the report) inside PacketSnooper struct.
+    /// It's part of the configuration phase.
+    ///
+    /// Transitions from ConfigFormat state to Ready state.
     /// PacketSnooper is now configured and ready to analyze network traffic
     ///
     /// # Examples
     ///
     /// Simplified call (without error handling)
     /// ```
-    /// let file_name: &str = "hello.txt";
-    /// packet_snooper.set_file_name(file_name).unwrap();
+    /// let report_format: &str = "verbose";
+    /// packet_snooper.set_report_format(report_format).unwrap();
     /// ```
     /// ```
-    /// packet_snooper.set_file_name("hello.txt").unwrap();
+    /// packet_snooper.set_report_format("verbose").unwrap();
     /// ```
     ///
     /// # Error
     ///
-    /// - `Invalid file name given as a parameter` (not supported yet)
-    /// - `Invalid call on set_file_name when in an illegal state`
+    /// - `Invalid format name given as a parameter`
+    /// - `Invalid call on set_report_format when in an illegal state`
     ///
     /// Handling error cases:
     /// ```
-    /// let file_name: &str = "hello.txt";
+    /// let report_format: &str = "verbose";
     ///
-    /// match packet_snooper.set_file_name(file_name) {
+    /// match packet_snooper.set_report_format(report_format) {
     ///     Ok(_) => (),
     ///     Err(e) => { println!("{}", e); },
     /// }
     /// ```
-    pub fn set_file_name(&mut self, file_path: &str) -> Result<()>{
-        if self.state == State::ConfigFile {
-            // TODO check file path is correct
-            self.file_path = PathBuf::from(file_path);
+    pub fn set_report_format(&mut self, report_format: &str) -> Result<()>{
+        if self.state == State::ReportFormat {
+            match report_format {
+                "raw" => { self.report_format = ReportFormat::Raw },
+                "verbose" => { self.report_format = ReportFormat::Verbose },
+                "report" => { self.report_format = ReportFormat::Report },
+                _ => {
+                    return Err(PSError::new("Invalid format name given as a parameter"))
+                }
+            }
             self.state = State::Ready;
             Ok(())
         } else {
-            Err(PSError::new("Invalid call on set_file_name when in an illegal state."))
+            Err(PSError::new("Invalid call on set_report_format when in an illegal state."))
         }
     }
 
@@ -410,6 +477,7 @@ impl PacketSnooper {
         self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(
             self.file_path.clone(),
             self.time_interval.as_secs(),
+            self.report_format.clone(),
             self.stop_thread.clone(),
             self.stop_thread_cv.clone(),
             Box::new(rx))));
@@ -608,10 +676,9 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(file_path: PathBuf, time_interval: u64, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
-            // TODO: handle error case better
-            let mut report_generator = ReportGenerator::new(file_path, time_interval, stop_thread, stop_thread_cv).expect("Something went wrong");
+            let mut report_generator = ReportGenerator::new(file_path, time_interval, report_format, stop_thread, stop_thread_cv).expect("Something went wrong");
 
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);

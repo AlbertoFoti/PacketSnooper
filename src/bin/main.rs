@@ -39,7 +39,20 @@ fn main() {
                 let file_name: Result<String, _> = get_data_from_user();
                 match file_name {
                     Ok(f) => {
-                        match packet_snooper.set_file_name(&f) {
+                        match packet_snooper.set_file_path(&f) {
+                            Ok(_) => { continue; },
+                            Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
+                        }
+                    },
+                    Err(e) => { println!("{}", e); },
+                }
+            }
+            State::ReportFormat => {
+                print_report_format_menu();
+                let format_report = get_data_from_user();
+                match format_report {
+                    Ok(f) => {
+                        match packet_snooper.set_report_format(&f) {
                             Ok(_) => { continue; },
                             Err(e) => { println!("{}. Retry. Press any key to continue.", e); wait_for_key_press(); },
                         }
@@ -155,6 +168,15 @@ fn print_config_file_menu() {
     println!("File Configuration");
     println!("------------------------");
     println!("Insert the file name you want as report generation target (\"output.txt\" by default) :");
+    print!(">>> ");
+    io::stdout().flush().unwrap();
+}
+
+fn print_report_format_menu() {
+    print_main_menu();
+    println!("Report format selection");
+    println!("------------------------");
+    println!("Choose the format of the report (raw/verbose/report) :");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }

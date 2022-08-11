@@ -13,7 +13,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
         - uses: actions/checkout@v3
@@ -29,6 +29,14 @@ jobs:
         - name: Tests
           if: matrix.os == 'ubuntu-latest'
           run: sudo cargo test --verbose
+        - name: Config
+          if: matrix.os == 'macOS-latest'
+          run: |
+            brew install cargo
+            brew install libpcap
+        - name: Build
+          if: matrix.os == 'macOS-latest'
+          run: sudo cargo build --verbose
         - name: Update cargo config to use Git CLI (windows)
           if: matrix.os == 'windows-latest'
           run: Set-Content -Path $env:USERPROFILE\.cargo\config.toml "[net]`ngit-fetch-with-cli = true"

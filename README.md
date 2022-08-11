@@ -45,11 +45,16 @@ identification: FTP=20, SSH=22, SMPT=23, DNS=53, HTTP=80, POP3=110
 future support: ()
 ````
 
-## Architecture Overview
+## Architecture Overview & Internal State Machine design
+<div>
+    <p align="center">
+      <img src="img/architecture.jpg" width="1000" height="500" />
+    </p>
+    <p align="center">
+      <img src="img/state_machine.jpg" width="870" height="500" />
+    </p>
+</div>
 ![This is an image](img/architecture.jpg)
-
-## Internal State Machine design
-![This is an image](img/statemachine.jpg)
 
 ## Technologies Used
 - Main programming Language: Rust
@@ -64,3 +69,7 @@ future support: ()
 - Alberto Foti
 - Samuele Giannetto
 - Simone Annecchini
+
+<p align="center">
+  <img src="img/packet_snooper_logo.png" style="alignment: center" width="500" height="500" />
+</p>

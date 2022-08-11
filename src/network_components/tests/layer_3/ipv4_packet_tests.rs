@@ -1,10 +1,10 @@
 use std::net::Ipv4Addr;
 use crate::network_components::layer_3::ipv4_packet::{IPv4Packet, Ipv4ProtocolType};
-use crate::network_components::tests::{IPV4_DATA_IN_U8, IPV4_DATA_IN_U8_WITH_OPTIONS};
+use crate::network_components::tests::{IPV4_DATA_IN_U8_UDP, IPV4_DATA_IN_U8_WITH_OPTIONS_UDP};
 
 #[test]
 fn new_ipv4_packet() {
-    let ipv4_packet = IPv4Packet::new(&IPV4_DATA_IN_U8[..]);
+    let ipv4_packet = IPv4Packet::new(&IPV4_DATA_IN_U8_UDP[..]);
 
     assert_eq!(ipv4_packet.version, 4);
     assert_eq!(ipv4_packet.header_length, 5);
@@ -20,12 +20,12 @@ fn new_ipv4_packet() {
     assert_eq!(ipv4_packet.ip_addr_src, Ipv4Addr::new(192, 168, 1, 90));
     assert_eq!(ipv4_packet.ip_addr_dst, Ipv4Addr::new(142, 250, 184, 42));
     assert_eq!(ipv4_packet.options, Vec::<u8>::new());
-    assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8[20..]));
+    assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8_UDP[20..]));
 }
 
 #[test]
 fn ipv4_options() {
-    let ipv4_packet = IPv4Packet::new(&IPV4_DATA_IN_U8_WITH_OPTIONS[..]);
+    let ipv4_packet = IPv4Packet::new(&IPV4_DATA_IN_U8_WITH_OPTIONS_UDP[..]);
 
     assert_eq!(ipv4_packet.version, 4);
     assert_eq!(ipv4_packet.header_length, 10);
@@ -40,8 +40,8 @@ fn ipv4_options() {
     assert_eq!(ipv4_packet.header_checksum, u16::from_be_bytes([128, 107]));
     assert_eq!(ipv4_packet.ip_addr_src, Ipv4Addr::new(192, 168, 1, 90));
     assert_eq!(ipv4_packet.ip_addr_dst, Ipv4Addr::new(142, 250, 184, 42));
-    assert_eq!(ipv4_packet.options, Vec::from(&IPV4_DATA_IN_U8_WITH_OPTIONS[20..40]));
-    assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8_WITH_OPTIONS[40..]));
+    assert_eq!(ipv4_packet.options, Vec::from(&IPV4_DATA_IN_U8_WITH_OPTIONS_UDP[20..40]));
+    assert_eq!(ipv4_packet.payload, Vec::from(&IPV4_DATA_IN_U8_WITH_OPTIONS_UDP[40..]));
 }
 
 #[test]
