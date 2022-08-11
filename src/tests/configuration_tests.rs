@@ -99,7 +99,7 @@ pub fn packet_snooper_set_file_path_interval_normal_test() {
     ps.state = State::ConfigFile; // forcing packet_snooper into a specific state (not safe, just for testing purposes)
     assert!(ps.set_file_path(file_path).is_ok());
 
-    assert_eq!(ps.state, State::Ready);
+    assert_eq!(ps.state, State::ReportFormat);
     assert_eq!(ps.file_path, PathBuf::from(file_path));
 }
 

@@ -12,11 +12,13 @@
 //! let interface_name: &str = "eth0";
 //! let time_interval: u64 = 60;
 //! let file_path: &str = "hello.txt";
+//! let report_format: &str = "report";
 //!
 //! let mut packet_snooper = PacketSnooper::new().with_details(
 //!             interface_name,
 //!             time_interval,
-//!             file_path).expect("Something went wrong.");  // It's now in state State::Ready
+//!             file_path,
+//!             report_format).expect("Something went wrong.");  // It's now in state State::Ready
 //!
 //! // possible operations
 //! packet_snooper.start().unwrap();
@@ -51,6 +53,13 @@
 //!        State::ConfigFile => {
 //!            ...
 //!            match packet_snooper.set_file_path(file_path) {
+//!                Ok(_) => { continue; },
+//!                Err(e) => { println!("{}", e); },
+//!            }
+//!        },
+//!        State::ReportFormat => {
+//!            ...
+//!            match packet_snooper.set_report_format(report_format) {
 //!                Ok(_) => { continue; },
 //!                Err(e) => { println!("{}", e); },
 //!            }
@@ -191,15 +200,21 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
+/// match packet_snooper.set_report_format("report") {
+///     Ok(_) => (),
+///     Err(_) => (),
+/// }
 /// ```
 /// ```
 /// let interface_name: &str = "eth0";
 /// let time_interval: u64 = 75;
 /// let file_path: &str = "dump.txt";
+/// let report_format: &str = "report";
 /// let mut packet_snooper = PacketSnooper::new().with_details(
 ///             interface_name,
 ///             time_interval,
-///             file_path).expect("Something went wrong.");
+///             file_path
+///             report_format).expect("Something went wrong.");
 /// ```
 pub struct PacketSnooper {
     /// Internal state (for configuration and management of operations purposes)
@@ -247,15 +262,18 @@ impl PacketSnooper {
     /// let interface_name: &str = "eth0";
     /// let time_interval: u64 = 75;
     /// let file_name: &str = "dump.txt";
+    /// let report_format: &str = "report";
     /// let mut packet_snooper = PacketSnooper::new().with_details(
     ///             interface_name,
     ///             time_interval,
-    ///             file_name).expect("Something went wrong.");
+    ///             file_name,
+    ///             report_format).expect("Something went wrong.");
     /// ```
-    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str) -> Result<PacketSnooper> {
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str, report_format: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
         self.set_file_path(file_path)?;
+        self.set_report_format(report_format)?;
         Ok(self)
     }
 
