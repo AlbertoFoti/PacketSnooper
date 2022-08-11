@@ -16,12 +16,14 @@ pub fn complete_setup() -> PacketSnooper {
     let time_interval = 75;
     let file_path = "hello.txt";
     let report_format = "report";
+    let packet_filter = "TCP";
 
     PacketSnooper::new().with_details(
         interface_name.as_str(),
         time_interval,
         file_path,
         report_format,
+        packet_filter,
     ).unwrap()
 }
 

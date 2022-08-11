@@ -211,7 +211,7 @@ pub enum State {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
-/// match packet_snooper.set_packet_filters("report") {
+/// match packet_snooper.set_packet_filters("TCP") {
 ///     Ok(_) => (),
 ///     Err(_) => (),
 /// }
@@ -285,11 +285,12 @@ impl PacketSnooper {
     ///             file_name,
     ///             report_format).expect("Something went wrong.");
     /// ```
-    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str, report_format: &str) -> Result<PacketSnooper> {
+    pub fn with_details(mut self, interface_name: &str, time_interval: u64, file_path: &str, report_format: &str, packet_filter: &str) -> Result<PacketSnooper> {
         self.set_device(interface_name)?;
         self.set_time_interval(time_interval)?;
         self.set_file_path(file_path)?;
         self.set_report_format(report_format)?;
+        self.set_packet_filter(packet_filter)?;
         Ok(self)
     }
 
@@ -470,7 +471,7 @@ impl PacketSnooper {
     ///
     /// # Error
     ///
-    /// - `Invalid format name given as a parameter`
+    /// - `Invalid format given as a parameter`
     /// - `Invalid call on set_packet_filter when in an illegal state`
     ///
     /// Handling error cases:
@@ -484,12 +485,12 @@ impl PacketSnooper {
     /// ```
     pub fn set_packet_filter(&mut self, packet_filter: &str) -> Result<()>{
         if self.state == State::PacketFilter {
-            //TODO: instead of to_string make a match basing on what the user will write
+            if !packet_filter.is_ascii() { return Err(PSError::new("Invalid format given as a parameter.")); }
             self.packet_filter = packet_filter.to_string();
             self.state = State::Ready;
             Ok(())
         } else {
-            Err(PSError::new("Invalid call on set_report_format when in an illegal state."))
+            Err(PSError::new("Invalid call on set_packet_filter when in an illegal state."))
         }
     }
 
