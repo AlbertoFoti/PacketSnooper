@@ -3,6 +3,7 @@
 //! Module to handle periodic report generation about the traffic analyzed.
 //!
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fs::OpenOptions;
@@ -10,7 +11,7 @@ use std::io::{Write};
 use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use crate::{EthernetPacket};
-use std::time::{Duration};
+use std::time::{Duration, Instant};
 use std::thread;
 use std::thread::JoinHandle;
 
@@ -49,9 +50,27 @@ impl From<std::io::Error> for RGError {
 pub enum ReportFormat {
     Raw,
     Verbose,
-    Quiet,
+    Report,
 }
 
+#[derive(Debug, Clone)]
+pub struct ReportDataInfo {
+    pub ip_src: String,
+    pub ip_dst: String,
+    //pub port_src: u16,
+    //pub port_dst: u16,
+    //pub l4_protocol: String,
+    //pub upper_service: String,
+    pub num_bytes: usize,
+    pub timestamp_recv: Instant,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ReportEntry {
+    pub num_bytes: usize,
+    pub timestamp_init: Instant,
+    pub timestamp_final: Instant,
+}
 
 pub trait DisplayAs {
     fn display_as(&self, report_format: ReportFormat) -> String;
@@ -61,7 +80,9 @@ pub struct InnerReportGenerator {
     file_path: PathBuf,
     time_interval: u64,
     report_format: ReportFormat,
+
     data: Vec<u8>,
+    data_format: HashMap<String, ReportEntry>,
 }
 
 impl InnerReportGenerator {
@@ -71,14 +92,34 @@ impl InnerReportGenerator {
             time_interval,
             report_format,
             data: Vec::new(),
+            data_format: HashMap::new(),
         })
     }
 
     pub fn push(&mut self, packet: &str) {
-        let mut dump_packet = self.format_packet(packet);
+        match self.report_format {
+            ReportFormat::Report => {
+                match EthernetPacket::from_json(&packet).unwrap().report_data() {
+                    Some(rg_info) => {
+                        let key = self.key_gen(rg_info.clone());
+                        //println!("{:?}", key);
 
-        self.data.append(&mut Vec::from("----------------\n"));
-        self.data.append(&mut dump_packet);
+                        // add to hash map
+                        let value = ReportEntry { num_bytes: 0, timestamp_init: rg_info.timestamp_recv, timestamp_final: rg_info.timestamp_recv };
+                        let entry = self.data_format.entry(key).or_insert(value);
+                        entry.num_bytes += rg_info.num_bytes;
+                        entry.timestamp_final = rg_info.timestamp_recv;
+                    },
+                    None => ()
+                }
+            },
+            _ => {  // ReportFormat::Raw && ReportFormat::Verbose
+                let mut dump_packet = self.format_packet(packet);
+
+                self.data.append(&mut Vec::from("----------------\n"));
+                self.data.append(&mut dump_packet);
+            }
+        }
     }
 
     fn format_packet(&self, packet: &str) -> Vec<u8> {
@@ -87,16 +128,41 @@ impl InnerReportGenerator {
     }
 
     pub fn generate_report(&mut self) -> Result<usize> {
-        let mut x = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(self.file_path.as_path())?;
-        let char_num = x.write(self.data.as_slice())?;
+        let mut file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(self.file_path.as_path())?;
 
-        self.data.clear();
-        println!("Printing data into file");
-        Ok(char_num)
+        match self.report_format {
+            ReportFormat::Report => {
+                let mut x = String::new();
+                for (key, value) in self.data_format.iter_mut() {
+                    let mut s = String::new();
+                    for elem in key.split_whitespace() {
+                        s.push_str(format!("{} | ", elem).as_str());
+                    }
+                    s.push_str(format!("{:?}\n", value).as_str());
+                    x.push_str(s.as_str());
+                }
+                let char_num = file.write(x.as_ref()).unwrap();
+                self.data_format.clear();
+                println!("Printing data for report");
+                Ok(char_num)
+            },
+            _ => {
+                let char_num = file.write(self.data.as_slice())?;
+                self.data.clear();
+                println!("Printing data into file");
+                Ok(char_num)
+            }
+        }
+    }
+
+    fn key_gen(&self, re_info: ReportDataInfo) -> String {
+        String::from(format!("{} {}",
+            re_info.ip_src,
+            re_info.ip_dst))
     }
 }
 

@@ -176,7 +176,7 @@ fn print_report_format_menu() {
     print_main_menu();
     println!("Report format selection");
     println!("------------------------");
-    println!("Choose the format of the packets shown in the report (raw/verbose/quiet) :");
+    println!("Choose the format of the report (raw/verbose/report) :");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }

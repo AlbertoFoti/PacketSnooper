@@ -1,8 +1,9 @@
+use std::time::Instant;
 use crate::network_components::layer_2::mac_address::MacAddress;
 use crate::network_components::layer_3::ipv4_packet::IPv4Packet;
 use crate::network_components::layer_3::ipv6_packet::IPv6Packet;
 use serde::{Serialize, Deserialize};
-use crate::report_generator::DisplayAs;
+use crate::report_generator::{DisplayAs, ReportDataInfo};
 use crate::ReportFormat;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -19,6 +20,7 @@ pub struct EthernetPacket {
     pub mac_addr_src: MacAddress,
     pub ether_type: Option<EtherType>,
     pub payload: Vec<u8>,
+    pub size: usize,
 }
 
 impl EthernetPacket {
@@ -27,7 +29,9 @@ impl EthernetPacket {
             mac_addr_dst: MacAddress::new(&ether_data_in_u8[0..6]),
             mac_addr_src: MacAddress::new(&ether_data_in_u8[6..12]),
             ether_type: EthernetPacket::to_ether_type(&ether_data_in_u8[12..14]),
-            payload: Vec::from(&ether_data_in_u8[14..]) }
+            payload: Vec::from(&ether_data_in_u8[14..]),
+            size: ether_data_in_u8.len(),
+        }
     }
 
     pub fn to_json(&self) -> String {
@@ -36,6 +40,37 @@ impl EthernetPacket {
 
     pub fn from_json(json: &str) -> Result<EthernetPacket, serde_json::Error> {
         serde_json::from_str(json)
+    }
+
+    pub fn report_data(&self) -> Option<ReportDataInfo> {
+        let ip_src;
+        let ip_dst;
+
+        match self.ether_type {
+            Some(EtherType::Ethernet802_3) => { return None; },
+            Some(EtherType::IPV4) => {
+                let ipv4_packet = IPv4Packet::new(self.payload.as_slice());
+                ip_src = ipv4_packet.ip_addr_src.to_string();
+                ip_dst = ipv4_packet.ip_addr_dst.to_string();
+            },
+            Some(EtherType::IPV6) => {
+                let ipv6_packet = IPv6Packet::new(self.payload.as_slice());
+                ip_src = ipv6_packet.ip_addr_src.to_string();
+                ip_dst = ipv6_packet.ip_addr_src.to_string();
+            },
+            Some(EtherType::ARP) => { return None; },
+            _ => { return None; }
+        };
+
+        Option::from(
+            ReportDataInfo {
+                ip_src, ip_dst,
+                //port_src, port_dst,
+                //l4_protocol,
+                //upper_service,
+                num_bytes: self.size,
+                timestamp_recv: Instant::now(),
+            } )
     }
 
     fn to_ether_type(ether_type_in_u8: &[u8]) -> Option<EtherType> {
@@ -89,9 +124,10 @@ impl DisplayAs for EthernetPacket {
                 res.push('\n');
                 res
             },
-            ReportFormat::Quiet => {
-                format!("Printing quiet ethernet packet")
-            },
+            ReportFormat::Report => {
+                res.push_str("Printing format for report");
+                res
+            }
         }
     }
 }

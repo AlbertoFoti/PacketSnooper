@@ -229,7 +229,7 @@ impl PacketSnooper {
             current_interface: String::from(Device::lookup().unwrap().name),
             time_interval: Duration::from_secs(60),
             file_path: PathBuf::from("output.txt"),
-            report_format: ReportFormat::Quiet,
+            report_format: ReportFormat::Report,
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -402,8 +402,8 @@ impl PacketSnooper {
         if self.state == State::ReportFormat {
             match report_format {
                 "raw" => { self.report_format = ReportFormat::Raw },
-                "quiet" => { self.report_format = ReportFormat::Quiet },
-                "verbose" => { self.report_format = ReportFormat::Verbose }
+                "verbose" => { self.report_format = ReportFormat::Verbose },
+                "report" => { self.report_format = ReportFormat::Report },
                 _ => {
                     return Err(PSError::new("Invalid format name given as a parameter"))
                 }
