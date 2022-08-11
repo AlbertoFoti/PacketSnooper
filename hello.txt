@@ -1,1 +1,0 @@
-IP src          | IP dst          | Port src  | Port dst  | L4 Protocol     | Upper Service   | Num. Bytes      | Initial Timestamp                   | Final Timestamp                    
