@@ -134,7 +134,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{JoinHandle};
 use std::time::Duration;
-use serde_json::Value::String;
+//use serde_json::Value::String;
 use crate::network_components::layer_2::ethernet_packet::EthernetPacket;
 use crate::report_generator::{ReportFormat, ReportGenerator};
 
@@ -475,6 +475,7 @@ impl PacketSnooper {
     /// ```
     pub fn set_packet_filter(&mut self, packet_filter: &str) -> Result<()>{
         if self.state == State::PacketFilter {
+            //TODO: instdea of to_string make a match basing on what the user will write
             self.packet_filter = packet_filter.to_string();
             self.state = State::Ready;
             Ok(())
@@ -525,6 +526,7 @@ impl PacketSnooper {
             self.file_path.clone(),
             self.time_interval.as_secs(),
             self.report_format.clone(),
+            self.packet_filter.clone(),
             self.stop_thread.clone(),
             self.stop_thread_cv.clone(),
             Box::new(rx))));
@@ -723,9 +725,9 @@ impl PacketSnooper {
         }
     }
 
-    fn consume_packets(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
-            let mut report_generator = ReportGenerator::new(file_path, time_interval, report_format, stop_thread, stop_thread_cv).expect("Something went wrong");
+            let mut report_generator = ReportGenerator::new(file_path, time_interval, report_format, packet_filter, stop_thread, stop_thread_cv).expect("Something went wrong");
 
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);

@@ -102,17 +102,19 @@ pub struct InnerReportGenerator {
     file_path: PathBuf,
     time_interval: u64,
     report_format: ReportFormat,
+    packet_filter: String,
 
     data: Vec<u8>,
     data_format: HashMap<String, ReportEntry>,
 }
 
 impl InnerReportGenerator {
-    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat) -> Result<Self> {
+    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter :String) -> Result<Self> {
         Ok(Self {
             file_path,
             time_interval,
             report_format,
+            packet_filter,
             data: Vec::new(),
             data_format: HashMap::new(),
         })
@@ -141,9 +143,12 @@ impl InnerReportGenerator {
                         // TODO : filtering (TCP HTTPS 5000)
                         // TODO : all words in filter are in key
                         // TODO:   if apply_filter() { .... } else { return; }
-                        let entry = self.data_format.entry(key).or_insert(value);
-                        entry.num_bytes += rg_info.num_bytes;
-                        entry.timestamp_final = rg_info.timestamp_recv;
+                        let filtri= self.packet_filter.clone();
+                        if key == filtri {
+                            let entry = self.data_format.entry(key).or_insert(value);
+                            entry.num_bytes += rg_info.num_bytes;
+                            entry.timestamp_final = rg_info.timestamp_recv;
+                        }
                     },
                     None => ()
                 }
@@ -211,11 +216,11 @@ pub struct ReportGenerator {
 }
 
 impl ReportGenerator {
-    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat , stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<ReportGenerator> {
+    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<ReportGenerator> {
         let end_thread = Arc::new(Mutex::new(false));
         let end_thread2 = end_thread.clone();
 
-        let inner_struct = Arc::new(Mutex::new(InnerReportGenerator::new(file_path, time_interval, report_format).unwrap()));
+        let inner_struct = Arc::new(Mutex::new(InnerReportGenerator::new(file_path, time_interval, report_format, packet_filter).unwrap()));
 
         let mut report_generator = Self {
             inner_struct,
