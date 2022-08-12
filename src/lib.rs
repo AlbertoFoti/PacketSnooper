@@ -4,7 +4,7 @@
 //!
 //! It was developed as part of a University project (Politecnico of Turin, Italy. "System and Device Programming". Year 2022).
 //!
-//! ( credits: Alberto Foti, Samuele Giannetto, Simone Annecchini )
+//! ( credits: Alberto Foti, Samuele Giannetto )
 //!
 //! # Let's get started! Simplified use of packet_snooper library
 //!
