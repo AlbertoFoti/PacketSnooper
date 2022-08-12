@@ -111,12 +111,8 @@
 // TODO : refactor report generator module
 
 // Future stuff to do
-// TODO : in-depth concurrency testing (Alberto, Samuele)
 // TODO : tests for IPv6 packet  (Alberto)
 // TODO : complete documentation and check for correctness (Alberto, Samuele)
-
-// Advanced (optional)
-// TODO : expanding the collection of protocols supported
 
 pub mod network_components;
 pub mod report_generator;
