@@ -16,6 +16,7 @@ use std::thread;
 use std::thread::JoinHandle;
 use chrono::{DateTime, Utc};
 
+#[cfg(test)]
 mod tests;
 
 #[derive(Debug, PartialEq)]
@@ -237,7 +238,7 @@ impl InnerReportGenerator {
 
                 self.data_format.iter_mut().for_each(|(_, value)| { report.push_str(format!("{}\n", value).as_str())});
 
-                let char_num = file.write(report.as_ref()).unwrap();
+                let char_num = file.write(report.as_ref())?;
 
                 self.data_format.clear();
 
@@ -254,7 +255,7 @@ impl InnerReportGenerator {
     }
 
     /// `Key Generation` based on a set of packet characteristics (IPs, Ports, L4 protocol)
-    fn key_gen(&self, re_info: ReportDataInfo) -> String {
+    pub fn key_gen(&self, re_info: ReportDataInfo) -> String {
         String::from(format!("{} {} {} {} {} {}",
             re_info.ip_src,
             re_info.ip_dst,
@@ -291,11 +292,9 @@ impl InnerReportGenerator {
 /// // Instantiation and automatic timer activation. When the timer fires everything pushed inside report_generator is logged in the report with the specified format.
 ///
 /// report_generator.push(&packet1);
-/// report_generator.push(&packet1);
-/// report_generator.push(&packet1);
-/// report_generator.push(&packet1);
-///
-///
+/// report_generator.push(&packet2);
+/// report_generator.push(&packet3);
+/// report_generator.push(&packet4);
 /// ```
 pub struct ReportGenerator {
     /// Inner struct to handle inner mutability in a thread-safe environment of the report generation

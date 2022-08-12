@@ -106,13 +106,9 @@
 //! }
 //! ```
 
-// Easy stuff
-// TODO : tests for report generator module
-// TODO : refactor report generator module
-
 // Future stuff to do
-// TODO : tests for IPv6 packet  (Alberto)
-// TODO : complete documentation and check for correctness (Alberto, Samuele)
+// TODO : tests
+// TODO : documentation
 
 pub mod network_components;
 pub mod report_generator;
@@ -192,6 +188,19 @@ pub struct ConfigOptions {
     pub report_format: ReportFormat,
     /// Packet filter
     pub packet_filter: String,
+}
+
+impl ConfigOptions {
+    /// `new`
+    pub fn new(current_interface: &str, time_interval: u64, file_path: &str, report_format: ReportFormat, packet_filter: &str) -> Self {
+        Self {
+            current_interface: current_interface.to_string(),
+            time_interval: Duration::from_secs(time_interval),
+            file_path: PathBuf::from(file_path),
+            report_format,
+            packet_filter: packet_filter.to_string(),
+        }
+    }
 }
 
 /// Struct to manage network analysis.
@@ -702,7 +711,7 @@ impl PacketSnooper {
     }
 
     /// Checks if input path is a valid path to be used as a target for report generation
-    fn check_valid_path(&self, file_path: &str) -> bool {
+    fn check_valid_path(&self, _file_path: &str) -> bool {
         true
     }
 
