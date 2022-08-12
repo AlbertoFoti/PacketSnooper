@@ -2,10 +2,13 @@ use pcap::Device;
 use crate::PacketSnooper;
 
 #[cfg(test)]
-pub mod packet_snooper_tests;
+pub mod concurrency_tests;
 
 #[cfg(test)]
 pub mod configuration_tests;
+
+#[cfg(test)]
+pub mod packet_snooper_tests;
 
 #[cfg(test)]
 pub mod state_machine_tests;
@@ -16,12 +19,14 @@ pub fn complete_setup() -> PacketSnooper {
     let time_interval = 75;
     let file_path = "hello.txt";
     let report_format = "report";
+    let packet_filter = "TCP";
 
     PacketSnooper::new().with_details(
         interface_name.as_str(),
         time_interval,
         file_path,
         report_format,
+        packet_filter,
     ).unwrap()
 }
 

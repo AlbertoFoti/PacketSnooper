@@ -68,7 +68,6 @@ future support: ()
 ## Authors
 - Alberto Foti
 - Samuele Giannetto
-- Simone Annecchini
 
 <p align="center">
   <img src="img/packet_snooper_logo.png" style="alignment: center" width="500" height="500" />

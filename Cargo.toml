@@ -1,7 +1,13 @@
 [package]
 name = "packet_snooper"
-version = "0.6.0"
+version = "1.0.0"
+authors = ["Alberto Foti <albertofots@gmail.com>", "Samuele Giannetto"]
 edition = "2021"
+description = "A crossplatform multithreaded framework to capture and analyze packets."
+readme = "README.md"
+repository = "https://github.com/XXmorpheusX/PacketSnooper.git"
+license = "MIT"
+keywords = ["network", "capture", "analysis", "packet"]
 
 [lib]
 name = "packet_snooper"
