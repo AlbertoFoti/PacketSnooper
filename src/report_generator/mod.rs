@@ -10,7 +10,7 @@ use std::fs::OpenOptions;
 use std::io::{Write};
 use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
-use crate::{EthernetPacket};
+use crate::{ConfigOptions, EthernetPacket};
 use std::time::{Duration};
 use std::thread;
 use std::thread::JoinHandle;
@@ -153,7 +153,7 @@ pub struct InnerReportGenerator {
     /// Path of the target file for report generation
     file_path: PathBuf,
     /// Time interval of the periodic report generation
-    time_interval: u64,
+    time_interval: Duration,
     /// Type of report
     report_format: ReportFormat,
     /// Filters applied to incoming packets
@@ -167,12 +167,12 @@ pub struct InnerReportGenerator {
 
 impl InnerReportGenerator {
     /// `new`
-    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter :String) -> Result<Self> {
+    pub fn new(config_options: ConfigOptions) -> Result<Self> {
         Ok(Self {
-            file_path,
-            time_interval,
-            report_format,
-            packet_filter,
+            file_path: config_options.file_path,
+            time_interval: config_options.time_interval,
+            report_format: config_options.report_format,
+            packet_filter: config_options.packet_filter,
             data: Vec::new(),
             data_format: HashMap::new(),
         })
@@ -307,11 +307,11 @@ pub struct ReportGenerator {
 
 impl ReportGenerator {
     /// `new`
-    pub fn new(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<ReportGenerator> {
+    pub fn new(config_options: ConfigOptions, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>) -> Result<ReportGenerator> {
         let end_thread = Arc::new(Mutex::new(false));
         let end_thread2 = end_thread.clone();
 
-        let inner_struct = Arc::new(Mutex::new(InnerReportGenerator::new(file_path, time_interval, report_format, packet_filter).unwrap()));
+        let inner_struct = Arc::new(Mutex::new(InnerReportGenerator::new(config_options).unwrap()));
 
         let mut report_generator = Self {
             inner_struct,
@@ -340,7 +340,7 @@ impl ReportGenerator {
 
                 thread::sleep(Duration::from_secs(1));
                 count += 1;
-                if count == time_interval && *end_thread.lock().unwrap() != true && *stop_thread.lock().unwrap() != true {
+                if count == time_interval.as_secs() && *end_thread.lock().unwrap() != true && *stop_thread.lock().unwrap() != true {
                     clone_inner_report_generator.lock().unwrap().generate_report().unwrap();
                     count = 0;
                 }

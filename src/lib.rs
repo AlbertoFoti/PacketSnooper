@@ -112,7 +112,6 @@
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
 // TODO : tests for IPv6 packet  (Alberto)
-// TODO : handling all error cases in a good way (...)
 // TODO : complete documentation and check for correctness (Alberto, Samuele)
 
 // Advanced (optional)
@@ -171,7 +170,7 @@ pub enum State {
     ConfigTimeInterval,
     /// Filename Configuration Stage: Insert the name of the target file (for report generation).
     ConfigFile,
-    /// Format of the report Stage: Decide how packets will be shown (raw,verbose,quit)
+    /// Format of the report Stage: Decide how packets will be shown (raw,verbose,report)
     ReportFormat,
     /// Packet filter Stage: Specify the filters, the packets that satisfy will be shown in the report
     PacketFilter,
@@ -181,6 +180,21 @@ pub enum State {
     Working,
     /// Network traffic analysis is stopped.
     Stopped,
+}
+
+#[derive(Debug, Clone)]
+/// Configuration Options for packet snooper framework.
+pub struct ConfigOptions {
+    /// Interface name (as target of network traffic analysis)
+    pub current_interface: String,
+    /// Time interval (until report generation)
+    pub time_interval: Duration,
+    /// File Path (as target of report generation)
+    pub file_path: PathBuf,
+    /// Report Format
+    pub report_format: ReportFormat,
+    /// Packet filter
+    pub packet_filter: String,
 }
 
 /// Struct to manage network analysis.
@@ -227,16 +241,8 @@ pub enum State {
 pub struct PacketSnooper {
     /// Internal state (for configuration and management of operations purposes)
     pub state: State,
-    /// Interface name (as target of network traffic analysis)
-    pub current_interface: String,
-    /// Time interval (until report generation)
-    pub time_interval: Duration,
-    /// File Path (as target of report generation)
-    pub file_path: PathBuf,
-    /// Report Format
-    pub report_format: ReportFormat,
-    /// Packet filter
-    pub packet_filter: String,
+    /// Configuration Options
+    pub config_options: ConfigOptions,
 
     stop_thread: Arc<Mutex<bool>>,
     stop_thread_cv: Arc<Condvar>,
@@ -254,11 +260,13 @@ impl PacketSnooper {
     pub fn new() -> PacketSnooper {
         PacketSnooper {
             state: State::ConfigDevice,
-            current_interface: String::from(Device::lookup().unwrap().name),
-            time_interval: Duration::from_secs(60),
-            file_path: PathBuf::from("output.txt"),
-            report_format: ReportFormat::Report,
-            packet_filter: String::new(),
+            config_options: ConfigOptions{
+                current_interface: String::from(Device::lookup().unwrap().name),
+                time_interval: Duration::from_secs(60),
+                file_path: PathBuf::from("output.txt"),
+                report_format: ReportFormat::Report,
+                packet_filter: String::new(),
+            },
             stop_thread: Arc::new(Mutex::new(false)),
             stop_thread_cv: Arc::new(Condvar::new()),
             end_thread: Arc::new(Mutex::new(false)),
@@ -317,7 +325,7 @@ impl PacketSnooper {
         if self.state == State::ConfigDevice {
             let device = PacketSnooper::retrieve_device(interface_name)?;
             self.state = State::ConfigTimeInterval;
-            self.current_interface = device.name.clone();
+            self.config_options.current_interface = device.name.clone();
             Ok(())
         } else {
             Err(PSError::new("Invalid call on set_device when in an illegal state."))
@@ -353,7 +361,7 @@ impl PacketSnooper {
     ///
     pub fn set_time_interval(&mut self, time_interval: u64) -> Result<()> {
         if self.state == State::ConfigTimeInterval {
-            self.time_interval = Duration::from_secs(time_interval);
+            self.config_options.time_interval = Duration::from_secs(time_interval);
             self.state = State::ConfigFile;
             Ok(())
         } else {
@@ -377,7 +385,7 @@ impl PacketSnooper {
     ///
     /// # Error
     ///
-    /// - `Invalid file name given as a parameter` (not supported yet)
+    /// - `Invalid file path given as a parameter`
     /// - `Invalid call on set_file_path when in an illegal state`
     ///
     /// Handling error cases:
@@ -391,8 +399,8 @@ impl PacketSnooper {
     /// ```
     pub fn set_file_path(&mut self, file_path: &str) -> Result<()>{
         if self.state == State::ConfigFile {
-            // TODO check file path is correct
-            self.file_path = PathBuf::from(file_path);
+            if !self.check_valid_path(file_path) { return Err(PSError::new("Invalid file path given as a parameter."))}
+            self.config_options.file_path = PathBuf::from(file_path);
             self.state = State::ReportFormat;
             Ok(())
         } else {
@@ -433,9 +441,9 @@ impl PacketSnooper {
     pub fn set_report_format(&mut self, report_format: &str) -> Result<()>{
         if self.state == State::ReportFormat {
             match report_format {
-                "raw" => { self.report_format = ReportFormat::Raw },
-                "verbose" => { self.report_format = ReportFormat::Verbose },
-                "report" => { self.report_format = ReportFormat::Report },
+                "raw" => { self.config_options.report_format = ReportFormat::Raw },
+                "verbose" => { self.config_options.report_format = ReportFormat::Verbose },
+                "report" => { self.config_options.report_format = ReportFormat::Report },
                 _ => {
                     return Err(PSError::new("Invalid format name given as a parameter"))
                 }
@@ -481,7 +489,7 @@ impl PacketSnooper {
     pub fn set_packet_filter(&mut self, packet_filter: &str) -> Result<()>{
         if self.state == State::PacketFilter {
             if !packet_filter.is_ascii() { return Err(PSError::new("Invalid format given as a parameter.")); }
-            self.packet_filter = packet_filter.to_string();
+            self.config_options.packet_filter = packet_filter.to_string();
             self.state = State::Ready;
             Ok(())
         } else {
@@ -491,7 +499,8 @@ impl PacketSnooper {
 
     /// *`start`* network traffic analysis inside PacketSnooper framework.
     ///
-    /// Transitions from Ready state to Working state, spawning a worker thread able to analyze network traffic.
+    /// Transitions from Ready state to Working state, spawning a worker thread able to capture network traffic and a consumer thread in
+    /// charge of collecting packets and preparing a periodic report generation.
     ///
     /// # Examples
     ///
@@ -514,24 +523,19 @@ impl PacketSnooper {
     pub fn start(&mut self) -> Result<()> {
         if self.state != State::Ready { return Err(PSError::new("Invalid call on start when in an illegal state.")); }
 
-        let interface_name = self.current_interface.clone();
-
         *self.stop_thread.lock().unwrap() = false;
         *self.end_thread.lock().unwrap() = false;
 
         let ( tx, rx ) = channel();
 
         self.network_capture_thread = Option::from(thread::spawn(PacketSnooper::network_analysis(
-            interface_name,
+            self.config_options.current_interface.clone(),
             self.stop_thread.clone(),
             self.stop_thread_cv.clone(),
             self.end_thread.clone(),
             tx)));
         self.consumer_thread = Option::from(thread::spawn(PacketSnooper::consume_packets(
-            self.file_path.clone(),
-            self.time_interval.as_secs(),
-            self.report_format.clone(),
-            self.packet_filter.clone(),
+            self.config_options.clone(),
             self.stop_thread.clone(),
             self.stop_thread_cv.clone(),
             Box::new(rx))));
@@ -700,6 +704,11 @@ impl PacketSnooper {
         Err(PSError::new("unable to find device with the specified interface name "))
     }
 
+    /// Checks if input path is a valid path to be used as a target for report generation
+    fn check_valid_path(&self, file_path: &str) -> bool {
+        true
+    }
+
     /// Network Analysis Thread for collecting packets from an interface
     fn network_analysis(interface_name: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>, tx: Sender<String>) -> impl FnOnce() -> () {
         let mut cap = Capture::from_device(interface_name.as_str()).unwrap()
@@ -733,9 +742,9 @@ impl PacketSnooper {
     }
 
     /// Consumer thread. Receives packets from the Analyzer thread and generates a report periodically.
-    fn consume_packets(file_path: PathBuf, time_interval: u64, report_format: ReportFormat, packet_filter: String, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
+    fn consume_packets(config_options: ConfigOptions, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, rx: Box<Receiver<String>>) -> impl FnOnce() -> () {
         move || {
-            let mut report_generator = ReportGenerator::new(file_path, time_interval, report_format, packet_filter, stop_thread, stop_thread_cv).expect("Something went wrong");
+            let mut report_generator = ReportGenerator::new(config_options, stop_thread, stop_thread_cv).expect("Something went wrong");
 
             while let Ok(packet) = rx.recv() {
                 report_generator.push(&packet);
@@ -752,15 +761,15 @@ impl PacketSnooper {
 
 impl Display for PacketSnooper {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Packet-Snooper: [interface: {} / ", self.current_interface).unwrap();
-        let device = Device::from(self.current_interface.as_str());
+        write!(f, "Packet-Snooper: [interface: {} / ", self.config_options.current_interface).unwrap();
+        let device = Device::from(self.config_options.current_interface.as_str());
         match device.addresses.get(0) {
             Some(addr) => { write!(f, "{:?}", addr.addr) },
             None => { write!(f, "None") }
         }.unwrap();
         write!(f, "\nInternal State: {:?}", self.state).unwrap();
-        write!(f, "\nTime interval before report generation : {:?}", self.time_interval).unwrap();
-        write!(f, "\nFile path Target for report generation: {:?}", self.file_path)
+        write!(f, "\nTime interval before report generation : {:?}", self.config_options.time_interval).unwrap();
+        write!(f, "\nFile path Target for report generation: {:?}", self.config_options.file_path)
     }
 }
 

@@ -2,10 +2,13 @@ use pcap::Device;
 use crate::PacketSnooper;
 
 #[cfg(test)]
-pub mod packet_snooper_tests;
+pub mod concurrency_tests;
 
 #[cfg(test)]
 pub mod configuration_tests;
+
+#[cfg(test)]
+pub mod packet_snooper_tests;
 
 #[cfg(test)]
 pub mod state_machine_tests;

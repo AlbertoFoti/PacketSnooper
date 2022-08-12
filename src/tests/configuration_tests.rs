@@ -13,7 +13,7 @@ pub fn packet_snooper_set_device_normal_test() {
     ps.set_device(interface_name.as_str()).unwrap();
 
     assert_eq!(ps.state, State::ConfigTimeInterval);
-    assert_eq!(ps.current_interface, interface_name);
+    assert_eq!(ps.config_options.current_interface, interface_name);
 }
 
 #[test]
@@ -30,7 +30,7 @@ pub fn packet_snooper_set_device_interface_not_found_test() {
     assert_eq!(got.message, "unable to find device with the specified interface name ");
 
     assert_eq!(ps.state, State::ConfigDevice);
-    assert_ne!(ps.current_interface, interface_name);
+    assert_ne!(ps.config_options.current_interface, interface_name);
 }
 
 #[test]
@@ -65,7 +65,7 @@ pub fn packet_snooper_set_time_interval_normal_test() {
     assert!(ps.set_time_interval(time_interval).is_ok());
 
     assert_eq!(ps.state, State::ConfigFile);
-    assert_eq!(ps.time_interval, Duration::from_secs(time_interval));
+    assert_eq!(ps.config_options.time_interval, Duration::from_secs(time_interval));
 }
 
 #[test]
@@ -92,7 +92,7 @@ pub fn packet_snooper_set_time_interval_in_invalid_state_test() {
 }
 
 #[test]
-pub fn packet_snooper_set_file_path_interval_normal_test() {
+pub fn packet_snooper_set_file_path_normal_test() {
     let file_path = "hello.txt";
     let mut ps = PacketSnooper::new();
 
@@ -100,7 +100,7 @@ pub fn packet_snooper_set_file_path_interval_normal_test() {
     assert!(ps.set_file_path(file_path).is_ok());
 
     assert_eq!(ps.state, State::ReportFormat);
-    assert_eq!(ps.file_path, PathBuf::from(file_path));
+    assert_eq!(ps.config_options.file_path, PathBuf::from(file_path));
 }
 
 #[test]
@@ -135,7 +135,7 @@ pub fn packet_snooper_set_report_format_normal_test() {
     assert!(ps.set_report_format(format_report).is_ok());
 
     assert_eq!(ps.state, State::PacketFilter);
-    assert_eq!(ps.report_format, ReportFormat::Report);
+    assert_eq!(ps.config_options.report_format, ReportFormat::Report);
 }
 
 #[test]
@@ -170,7 +170,7 @@ pub fn packet_snooper_set_packet_filter_normal_test() {
     assert!(ps.set_packet_filter(packet_filter).is_ok());
 
     assert_eq!(ps.state, State::Ready);
-    assert_eq!(ps.packet_filter, "TCP".to_string());
+    assert_eq!(ps.config_options.packet_filter, "TCP".to_string());
 }
 
 #[test]
