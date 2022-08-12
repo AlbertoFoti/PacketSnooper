@@ -108,7 +108,7 @@
 
 // Future stuff to do
 // TODO : tests
-// TODO : documentation
+// TODO : expand number of protocols supported
 
 pub mod network_components;
 pub mod report_generator;
