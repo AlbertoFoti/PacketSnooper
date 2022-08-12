@@ -108,6 +108,7 @@
 
 // Easy stuff
 // TODO : tests for report generator module
+// TODO : refactor report generator module
 
 // Future stuff to do
 // TODO : in-depth concurrency testing (Alberto, Samuele)
