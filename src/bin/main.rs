@@ -145,11 +145,12 @@ fn print_interfaces() -> () {
     for device in Device::list().unwrap() {
         print!("[{:?} ] : ", device.name);
         for address in device.addresses {
-            println!(
-                "[{:?} / {:?}]",
+            print!(
+                " [{:?} / {:?}] ",
                 address.addr, address.netmask
             );
         }
+        println!();
     }
 }
 
