@@ -247,7 +247,9 @@ impl InnerReportGenerator {
             },
             _ => {
                 let char_num = file.write(self.data.as_slice())?;
+
                 self.data.clear();
+
                 println!("Printing data into file");
                 Ok(char_num)
             }
@@ -324,7 +326,7 @@ impl ReportGenerator {
     }
 
     /// `activate` thread for periodic report generation (timer)
-    pub fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
+    fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
         let clone_inner_report_generator = self.inner_struct.clone();
         let time_interval = clone_inner_report_generator.lock().unwrap().time_interval;
 

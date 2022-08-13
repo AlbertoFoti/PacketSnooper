@@ -39,6 +39,21 @@ pub fn push_test() {
 }
 
 #[test]
+pub fn generate_report_test() {
+    let mut inner_report_generator = create_report_generator_inner().unwrap();
+
+    inner_report_generator.push(PACKET);
+    assert_eq!(inner_report_generator.data_format.len(), 1);
+
+    // This is just a test on the inner struct report generation.
+    // This struct will be wrapped, and a timer thread will be used to call this function.
+    // No end user should call this function explicitly.
+    let res = inner_report_generator.generate_report();
+    assert!(res.is_ok());
+    assert_eq!(inner_report_generator.data_format.len(), 0); // data flushed after report
+}
+
+#[test]
 pub fn key_gen_normal_test() {
     let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
 
@@ -65,10 +80,68 @@ pub fn key_gen_normal_test_2() {
 
 #[test]
 pub fn apply_filter_normal_test() {
-    assert_eq!(1, 1)
+    let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
+    let inner_report_generator = create_report_generator_inner().unwrap();
+    let key = inner_report_generator.key_gen(rg_info);
+
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, true);
 }
 
 #[test]
 pub fn apply_filter_normal_test_2() {
+    let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
+    let mut inner_report_generator = create_report_generator_inner().unwrap();
+    inner_report_generator.packet_filter = "TCP".to_string();
+    let key = inner_report_generator.key_gen(rg_info);
+
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, false);
+}
+
+#[test]
+pub fn apply_filter_multiple_words_ok_test() {
+    let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
+    let mut inner_report_generator = create_report_generator_inner().unwrap();
+
+    inner_report_generator.packet_filter = "UDP 443".to_string();
+    let key = inner_report_generator.key_gen(rg_info.clone());
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, true);
+
+    inner_report_generator.packet_filter = "UDP HTTPS".to_string();
+    let key = inner_report_generator.key_gen(rg_info.clone());
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, true);
+
+    inner_report_generator.packet_filter = "UDP HTTPS 192.168.1.119".to_string();
+    let key = inner_report_generator.key_gen(rg_info);
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, true);
+}
+
+#[test]
+pub fn apply_filter_multiple_words_err_test() {
+    let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
+    let mut inner_report_generator = create_report_generator_inner().unwrap();
+
+    inner_report_generator.packet_filter = "UDP 555".to_string();
+    let key = inner_report_generator.key_gen(rg_info.clone());
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, false);
+
+    inner_report_generator.packet_filter = "TCP HTTPS".to_string();
+    let key = inner_report_generator.key_gen(rg_info.clone());
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, false);
+
+    inner_report_generator.packet_filter = "UDP DNS 192.168.1.119".to_string();
+    let key = inner_report_generator.key_gen(rg_info);
+    let res = inner_report_generator.apply_filter(key.as_str());
+    assert_eq!(res, false);
+}
+
+#[test]
+pub fn format_packet_test() {
     assert_eq!(1, 1)
 }
