@@ -195,7 +195,7 @@ impl InnerReportGenerator {
                             port_dst: rg_info.port_dst,
                             l4_protocol: rg_info.l4_protocol,
                             upper_service: rg_info.upper_service,
-                            num_bytes: rg_info.num_bytes,
+                            num_bytes: 0,
                             timestamp_init: rg_info.timestamp_recv,
                             timestamp_final: rg_info.timestamp_recv };
 

@@ -58,14 +58,21 @@ pub fn push_test2() {
     let stop_thread_cv = Arc::new(Condvar::new());
 
     let mut report_generator = create_report_generator(stop_thread.clone(), stop_thread_cv.clone()).unwrap();
-    report_generator.push(PACKET);
-    report_generator.push(PACKET);
-    report_generator.push(PACKET);
-    report_generator.push(PACKET);
-    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 1);
-
     let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
     let key = report_generator.inner_struct.lock().unwrap().key_gen(rg_info);
+
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 0);
+    report_generator.push(PACKET);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 1);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.get_key_value(key.as_str()).unwrap().1.num_bytes, 1*PACKET_SIZE);
+    report_generator.push(PACKET);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 1);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.get_key_value(key.as_str()).unwrap().1.num_bytes, 2*PACKET_SIZE);
+    report_generator.push(PACKET);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 1);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.get_key_value(key.as_str()).unwrap().1.num_bytes, 3*PACKET_SIZE);
+    report_generator.push(PACKET);
+    assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 1);
     assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.get_key_value(key.as_str()).unwrap().1.num_bytes, 4*PACKET_SIZE);
 }
 
