@@ -131,7 +131,7 @@ pub struct ReportEntry {
 
 impl Display for ReportEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}",
+        write!(f, "{0: <25} | {1: <25} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}",
             self.ip_src,
             self.ip_dst,
             self.port_src,
@@ -234,7 +234,7 @@ impl InnerReportGenerator {
 
         match self.report_format {
             ReportFormat::Report => {
-                let mut report = String::from(format!("{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}\n",
+                let mut report = String::from(format!("{0: <25} | {1: <25} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}\n",
                 "IP src", "IP dst", "Port src", "Port dst", "L4 Protocol", "Upper Service", "Num. Bytes", "Initial Timestamp", "Final Timestamp").as_str());
 
                 self.data_format.iter_mut().for_each(|(_, value)| { report.push_str(format!("{}\n", value).as_str())});

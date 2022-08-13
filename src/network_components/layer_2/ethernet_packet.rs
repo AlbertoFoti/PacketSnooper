@@ -71,11 +71,9 @@ impl EthernetPacket {
                 (port_src, port_dst) = self.ports(&ipv4_packet.payload);
 
                 l4_protocol = self.l4_protocol(&self.payload);
-                println!(">>> {}", l4_protocol.clone().unwrap());
                 if l4_protocol.is_none() { return None; }
 
                 upper_service = self.upper_layer_service(&ipv4_packet.payload);
-                println!(">>> {}", upper_service.clone().unwrap());
                 if upper_service.is_none() { return None; }
             },
             Some(EtherType::IPV6) => {
