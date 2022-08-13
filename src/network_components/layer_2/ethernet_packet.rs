@@ -23,18 +23,22 @@ pub struct EthernetPacket {
     pub payload: Vec<u8>,
     pub size: usize,
     pub timestamp_recv: DateTime<Utc>,
+    pub report_data: Option<ReportDataInfo>,
 }
 
 impl EthernetPacket {
     pub fn new(ether_data_in_u8: &[u8]) -> EthernetPacket {
-        EthernetPacket {
+        let mut ethernet_packet = EthernetPacket {
             mac_addr_dst: MacAddress::new(&ether_data_in_u8[0..6]),
             mac_addr_src: MacAddress::new(&ether_data_in_u8[6..12]),
             ether_type: EthernetPacket::to_ether_type(&ether_data_in_u8[12..14]),
             payload: Vec::from(&ether_data_in_u8[14..]),
             size: ether_data_in_u8.len(),
             timestamp_recv: Utc::now(),
-        }
+            report_data: None,
+        };
+        ethernet_packet.report_data = ethernet_packet.report_data();
+        ethernet_packet
     }
 
     pub fn to_json(&self) -> String {
@@ -45,7 +49,7 @@ impl EthernetPacket {
         serde_json::from_str(json)
     }
 
-    pub fn report_data(&self) -> Option<ReportDataInfo> {
+    fn report_data(&self) -> Option<ReportDataInfo> {
         #[allow(unused_assignments)]
         let mut ip_src = String::new();
         #[allow(unused_assignments)]
@@ -67,9 +71,11 @@ impl EthernetPacket {
                 (port_src, port_dst) = self.ports(&ipv4_packet.payload);
 
                 l4_protocol = self.l4_protocol(&self.payload);
+                println!(">>> {}", l4_protocol.clone().unwrap());
                 if l4_protocol.is_none() { return None; }
 
                 upper_service = self.upper_layer_service(&ipv4_packet.payload);
+                println!(">>> {}", upper_service.clone().unwrap());
                 if upper_service.is_none() { return None; }
             },
             Some(EtherType::IPV6) => {
@@ -133,10 +139,10 @@ impl EthernetPacket {
             },
             EtherType::IPV6 => {
                 let ipv6_packet = IPv6Packet::new(&payload_in_u8);
-                match ipv6_packet.next_header.unwrap() {
-                    Ipv6NextHeader::TCP => { Some("TCP".to_string()) },
-                    Ipv6NextHeader::UDP => { Some("UDP".to_string()) }
-                    Ipv6NextHeader::IPv6HopByHopOption => {
+                match ipv6_packet.next_header {
+                    Some(Ipv6NextHeader::TCP) => { Some("TCP".to_string()) },
+                    Some(Ipv6NextHeader::UDP) => { Some("UDP".to_string()) }
+                    Some(Ipv6NextHeader::IPv6HopByHopOption) => {
                         match ipv6_packet.payload.get(0) {
                             Some(x) => {
                                 let next_header = IPv6Packet::to_protocol_type(*x);

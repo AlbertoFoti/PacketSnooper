@@ -12,7 +12,7 @@ pub fn create_report_generator(stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Ar
         15,
         "output.txt",
         ReportFormat::Report,
-        "UDP");
+        "TCP");
 
     ReportGenerator::new(options, stop_thread, stop_thread_cv)
 }
@@ -23,7 +23,7 @@ pub fn create_report_generator2(stop_thread: Arc<Mutex<bool>>, stop_thread_cv: A
         3,
         "output.txt",
         ReportFormat::Report,
-        "UDP");
+        "TCP");
 
     ReportGenerator::new(options, stop_thread, stop_thread_cv)
 }
@@ -58,7 +58,7 @@ pub fn push_test2() {
     let stop_thread_cv = Arc::new(Condvar::new());
 
     let mut report_generator = create_report_generator(stop_thread.clone(), stop_thread_cv.clone()).unwrap();
-    let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data().unwrap();
+    let rg_info = EthernetPacket::from_json(PACKET).unwrap().report_data.unwrap();
     let key = report_generator.inner_struct.lock().unwrap().key_gen(rg_info);
 
     assert_eq!(report_generator.inner_struct.lock().unwrap().data_format.len(), 0);

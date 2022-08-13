@@ -15,6 +15,7 @@ use std::time::{Duration};
 use std::thread;
 use std::thread::JoinHandle;
 use chrono::{DateTime, Utc};
+use serde::{Serialize, Deserialize};
 
 #[cfg(test)]
 mod tests;
@@ -84,7 +85,7 @@ pub enum ReportFormat {
     Report,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 /// `Report Info` for "report" format generation
 pub struct ReportDataInfo {
     /// IP source
@@ -183,7 +184,7 @@ impl InnerReportGenerator {
     pub fn push(&mut self, packet: &str) {
         match self.report_format {
             ReportFormat::Report => {
-                match EthernetPacket::from_json(&packet).unwrap().report_data() {
+                match EthernetPacket::from_json(&packet).unwrap().report_data {
                     Some(rg_info) => {
                         let key = self.key_gen(rg_info.clone());
 
