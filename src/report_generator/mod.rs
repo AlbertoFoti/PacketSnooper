@@ -15,6 +15,7 @@ use std::time::{Duration};
 use std::thread;
 use std::thread::JoinHandle;
 use chrono::{DateTime, Utc};
+use serde::{Serialize, Deserialize};
 
 #[cfg(test)]
 mod tests;
@@ -84,7 +85,7 @@ pub enum ReportFormat {
     Report,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 /// `Report Info` for "report" format generation
 pub struct ReportDataInfo {
     /// IP source
@@ -130,7 +131,7 @@ pub struct ReportEntry {
 
 impl Display for ReportEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}",
+        write!(f, "{0: <25} | {1: <25} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}",
             self.ip_src,
             self.ip_dst,
             self.port_src,
@@ -183,7 +184,7 @@ impl InnerReportGenerator {
     pub fn push(&mut self, packet: &str) {
         match self.report_format {
             ReportFormat::Report => {
-                match EthernetPacket::from_json(&packet).unwrap().report_data() {
+                match EthernetPacket::from_json(&packet).unwrap().report_data {
                     Some(rg_info) => {
                         let key = self.key_gen(rg_info.clone());
 
@@ -195,7 +196,7 @@ impl InnerReportGenerator {
                             port_dst: rg_info.port_dst,
                             l4_protocol: rg_info.l4_protocol,
                             upper_service: rg_info.upper_service,
-                            num_bytes: rg_info.num_bytes,
+                            num_bytes: 0,
                             timestamp_init: rg_info.timestamp_recv,
                             timestamp_final: rg_info.timestamp_recv };
 
@@ -233,7 +234,7 @@ impl InnerReportGenerator {
 
         match self.report_format {
             ReportFormat::Report => {
-                let mut report = String::from(format!("{0: <15} | {1: <15} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}\n",
+                let mut report = String::from(format!("{0: <25} | {1: <25} | {2: <9} | {3: <9} | {4: <15} | {5: <15} | {6: <15} | {7: <35} | {8: <35}\n",
                 "IP src", "IP dst", "Port src", "Port dst", "L4 Protocol", "Upper Service", "Num. Bytes", "Initial Timestamp", "Final Timestamp").as_str());
 
                 self.data_format.iter_mut().for_each(|(_, value)| { report.push_str(format!("{}\n", value).as_str())});
@@ -247,7 +248,9 @@ impl InnerReportGenerator {
             },
             _ => {
                 let char_num = file.write(self.data.as_slice())?;
+
                 self.data.clear();
+
                 println!("Printing data into file");
                 Ok(char_num)
             }
@@ -324,7 +327,7 @@ impl ReportGenerator {
     }
 
     /// `activate` thread for periodic report generation (timer)
-    pub fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
+    fn activate(&mut self, stop_thread: Arc<Mutex<bool>>, stop_thread_cv: Arc<Condvar>, end_thread: Arc<Mutex<bool>>) {
         let clone_inner_report_generator = self.inner_struct.clone();
         let time_interval = clone_inner_report_generator.lock().unwrap().time_interval;
 

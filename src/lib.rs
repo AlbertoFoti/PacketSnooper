@@ -106,8 +106,13 @@
 //! }
 //! ```
 
-// Future stuff to do
-// TODO : tests
+// TODO :    tests :
+// TODO :    - network_components :
+// TODO :                   - Layer 2      :
+// TODO :                   - Layer 3      :
+// TODO :                   - Layer 4      :
+// TODO :                   - Upper Layers :
+
 // TODO : expand number of protocols supported
 
 pub mod network_components;
