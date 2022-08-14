@@ -200,7 +200,7 @@ fn print_packet_filter_menu() {
     println!("------------------------");
     println!("Insert the filters that packets must satisfy :");
     println!("(Filters accepted: IP address / port address / layer3 protocol / layer4 protocols / upper layer service) ");
-    println!("(separate each filter keyword with a space) : ");
+    println!("(separate each filter keyword with a space or press Enter to skip) : ");
     print!(">>> ");
     io::stdout().flush().unwrap();
 }
