@@ -53,8 +53,10 @@ future support: ()
     <p align="center">
       <img src="img/state_machine.jpg" width="870" height="500" />
     </p>
+    <p align="center">
+      <img src="img/concurrency_architecture.jpg" width="870" height="500" />
+    </p>
 </div>
-![This is an image](img/architecture.jpg)
 
 ## Technologies Used
 - Main programming Language: Rust
