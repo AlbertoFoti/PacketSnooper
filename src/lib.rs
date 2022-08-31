@@ -581,7 +581,7 @@ impl PacketSnooper {
         if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state.")); }
 
         *self.stop_thread.lock().unwrap() = true;
-        self.stop_thread_cv.notify_one();
+        self.stop_thread_cv.notify_all();
 
         self.state = State::Stopped;
         Ok(())
