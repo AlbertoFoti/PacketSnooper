@@ -106,9 +106,14 @@
 //! }
 //! ```
 
-// Future stuff to do
-// TODO : tests
-// TODO : documentation
+// TODO :    tests :
+// TODO :    - network_components :
+// TODO :                   - Layer 2      :
+// TODO :                   - Layer 3      :
+// TODO :                   - Layer 4      :
+// TODO :                   - Upper Layers :
+
+// TODO : expand number of protocols supported
 
 pub mod network_components;
 pub mod report_generator;
@@ -121,6 +126,7 @@ use std::fmt::{Display, Formatter};
 use pcap::{Capture, Device, Packet};
 use std::{thread};
 use std::error::Error;
+use std::fs::OpenOptions;
 use std::path::{PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -147,6 +153,12 @@ impl PSError {
 impl Display for PSError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "PSError: {}", self.message)
+    }
+}
+
+impl From<std::io::Error> for PSError {
+    fn from(obj: std::io::Error) -> PSError {
+        PSError::new(format!("io::Error : {:?}", obj.to_string()).as_str())
     }
 }
 
@@ -405,8 +417,16 @@ impl PacketSnooper {
     /// ```
     pub fn set_file_path(&mut self, file_path: &str) -> Result<()>{
         if self.state == State::ConfigFile {
-            if !self.check_valid_path(file_path) { return Err(PSError::new("Invalid file path given as a parameter."))}
-            self.config_options.file_path = PathBuf::from(file_path);
+            match file_path {
+                "" => {},
+                _ => {
+                    match self.check_valid_path(file_path) {
+                        Ok(()) => {},
+                        Err(..) => { return Err(PSError::new("Invalid file path given as a parameter.")) }
+                    }
+                    self.config_options.file_path = PathBuf::from(file_path);
+                }
+            }
             self.state = State::ReportFormat;
             Ok(())
         } else {
@@ -576,7 +596,6 @@ impl PacketSnooper {
         if self.state != State::Working { return Err(PSError::new("Invalid call on stop when in an illegal state.")); }
 
         *self.stop_thread.lock().unwrap() = true;
-        self.stop_thread_cv.notify_one();
 
         self.state = State::Stopped;
         Ok(())
@@ -711,8 +730,13 @@ impl PacketSnooper {
     }
 
     /// Checks if input path is a valid path to be used as a target for report generation
-    fn check_valid_path(&self, _file_path: &str) -> bool {
-        true
+    fn check_valid_path(&self, _file_path: &str) -> Result<()> {
+        let _file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(self.config_options.file_path.as_path())?;
+        Ok(())
     }
 
     /// Network Analysis Thread for collecting packets from an interface
