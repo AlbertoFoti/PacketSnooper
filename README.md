@@ -17,6 +17,31 @@ It was developed as part of a University project (Politecnico of Turin, Italy. "
   <img src="img/packet_snooper_logo.png" style="alignment: center" width="200" height="200" />
 </p>
 
+## Setup / Install
+### Installing dependencies
+- Windows
+
+Install WinPcap.
+
+Download the WinPcap Developer's Pack.
+
+Add the /Lib or /Lib/x64 folder to your LIB environment variable.
+
+- Linux
+
+Install the libraries and header files for the libpcap library. For example:
+
+    On Debian based Linux: install libpcap-dev.
+    On Fedora Linux: install libpcap-devel.
+
+Note: If not running as root, you need to set capabilities like so: sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin.
+
+- Mac OS X
+
+libpcap should be installed on Mac OS X by default.
+
+### Additional Info
+Note: A timeout of zero may cause pcap::Capture::next to hang and never return (because it waits for the timeout to expire before returning). This can be fixed by using a non-zero timeout (as the libpcap manual recommends) and calling pcap::Capture::next in a loop.
 
 ## TCP/IP Architecture Support
 ### Layer 2
