@@ -1,6 +1,6 @@
 [package]
 name = "packet_snooper"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Alberto Foti <albertofots@gmail.com>", "Samuele Giannetto"]
 edition = "2021"
 description = "A crossplatform multithreaded framework to capture and analyze packets."
